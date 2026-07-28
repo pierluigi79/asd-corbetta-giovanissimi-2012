@@ -1,30 +1,26 @@
-import "./App.css";
+import { Routes, Route } from "react-router-dom";
+
+import Header from "./components/Header";
+import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
 
 import Home from "./pages/Home";
+import Avvisi from "./pages/Avvisi";
 
 function App() {
   return (
-    <div className="app">
-      <header className="header">
-        <h1>⚽ ASD Calcio Corbetta</h1>
-        <p>Giovanissimi 2012</p>
-      </header>
+    <div>
+      <Header />
+      <Navbar />
 
-      <nav className="navbar">
-        <a href="#">Home</a>
-        <a href="#">Avvisi</a>
-        <a href="#">Convocazioni</a>
-        <a href="#">Galleria</a>
-        <a href="#">Contatti</a>
-      </nav>
-
-     <main className="container">
-       <Home />
+      <main>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/avvisi" element={<Avvisi />} />
+        </Routes>
       </main>
 
-      <footer className="footer">
-        © ASD Calcio Corbetta - Giovanissimi 2012
-      </footer>
+      <Footer />
     </div>
   );
 }
