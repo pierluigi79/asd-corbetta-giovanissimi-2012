@@ -9,7 +9,7 @@ function Header() {
         className="site-logo"
       />
 
-      <div>
+      <div className="site-title">
         <h1>ASD Calcio Corbetta</h1>
         <p>Giovanissimi 2012</p>
       </div>
