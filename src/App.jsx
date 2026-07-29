@@ -10,13 +10,15 @@ import Convocazioni from "./pages/Convocazioni";
 import Galleria from "./pages/Galleria";
 import Contatti from "./pages/Contatti";
 
+import "./App.css";
+
 function App() {
   return (
-    <div>
+    <div className="app">
       <Header />
       <Navbar />
 
-      <main>
+      <main className="page-content">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/avvisi" element={<Avvisi />} />
