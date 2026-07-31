@@ -1,56 +1,88 @@
+import { useEffect, useState } from "react";
+import { supabase } from "../lib/supabase";
+
 function Avvisi() {
+  const [avvisi, setAvvisi] = useState([]);
+  const [caricamento, setCaricamento] = useState(true);
+  const [errore, setErrore] = useState("");
+
+  useEffect(() => {
+    async function caricaAvvisi() {
+      const { data, error } = await supabase
+        .from("avvisi")
+        .select("*")
+        .order("data_pubblicazione", { ascending: false });
+
+      if (error) {
+        setErrore(error.message);
+      } else {
+        setAvvisi(data ?? []);
+      }
+
+      setCaricamento(false);
+    }
+
+    caricaAvvisi();
+  }, []);
+
   return (
     <section>
       <div className="page-heading">
         <p className="page-kicker">Comunicazioni della squadra</p>
         <h2>Avvisi</h2>
-        <p>
-          Tutte le informazioni importanti per giocatori e famiglie.
-        </p>
+        <p>Tutte le informazioni importanti per giocatori e famiglie.</p>
       </div>
 
+      {caricamento && <p>Caricamento avvisi...</p>}
+
+      {errore && (
+        <p>
+          Errore nel caricamento: <strong>{errore}</strong>
+        </p>
+      )}
+
+      {!caricamento && !errore && avvisi.length === 0 && (
+        <p>Nessun avviso pubblicato.</p>
+      )}
+
       <div className="avvisi-list">
-        <article className="avviso-card avviso-importante">
-          <div className="avviso-top">
-            <span className="avviso-badge">Importante</span>
-            <time>10 settembre 2026</time>
-          </div>
+        {avvisi.map((avviso) => (
+          <article
+            key={avviso.id}
+            className={`avviso-card ${
+              avviso.priorita === "importante" ? "avviso-importante" : ""
+            }`}
+          >
+            <div className="avviso-top">
+              <span
+                className={`avviso-badge ${
+                  avviso.priorita !== "importante"
+                    ? "avviso-badge-info"
+                    : ""
+                }`}
+              >
+                {avviso.priorita || avviso.categoria}
+              </span>
 
-          <h3>Consegna documenti per il tesseramento</h3>
+              <time>
+                {avviso.data_pubblicazione
+                  ? new Date(avviso.data_pubblicazione).toLocaleDateString(
+                      "it-IT"
+                    )
+                  : ""}
+              </time>
+            </div>
 
-          <p>
-            Ricordiamo alle famiglie di consegnare allo staff la documentazione
-            richiesta entro venerdì.
-          </p>
-        </article>
+            <h3>{avviso.titolo}</h3>
+            <p>{avviso.testo}</p>
 
-        <article className="avviso-card">
-          <div className="avviso-top">
-            <span className="avviso-badge avviso-badge-info">Allenamento</span>
-            <time>8 settembre 2026</time>
-          </div>
-
-          <h3>Variazione orario allenamento</h3>
-
-          <p>
-            L'allenamento di giovedì inizierà alle ore 18:30. Il ritrovo è
-            previsto quindici minuti prima.
-          </p>
-        </article>
-
-        <article className="avviso-card">
-          <div className="avviso-top">
-            <span className="avviso-badge avviso-badge-info">Materiale</span>
-            <time>5 settembre 2026</time>
-          </div>
-
-          <h3>Abbigliamento per le partite</h3>
-
-          <p>
-            I giocatori devono presentarsi con tuta sociale, borraccia
-            personale e documento di riconoscimento.
-          </p>
-        </article>
+            {avviso.autore && (
+              <p>
+                <small>Pubblicato da {avviso.autore}</small>
+              </p>
+            )}
+          </article>
+        ))}
       </div>
     </section>
   );
