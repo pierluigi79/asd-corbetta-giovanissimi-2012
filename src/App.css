@@ -551,3 +551,282 @@ main > section h2 {
     gap: 8px;
   }
 }
+/* FORM AREA STAFF */
+
+.staff-form-card {
+  padding: 28px;
+  background: white;
+  border: 1px solid #dce9f4;
+  border-radius: 18px;
+  box-shadow: 0 12px 35px rgba(12, 74, 127, 0.1);
+}
+
+.staff-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-field-full {
+  grid-column: 1 / -1;
+}
+
+.form-field label {
+  color: #16324f;
+  font-weight: 700;
+}
+
+.form-field input,
+.form-field select,
+.form-field textarea {
+  width: 100%;
+  padding: 13px 14px;
+  border: 1px solid #c8d9e8;
+  border-radius: 10px;
+  background: white;
+  color: #16324f;
+  font: inherit;
+}
+
+.form-field textarea {
+  resize: vertical;
+  min-height: 150px;
+}
+
+.form-field input:focus,
+.form-field select:focus,
+.form-field textarea:focus {
+  border-color: #2c8ed6;
+  outline: 3px solid rgba(44, 142, 214, 0.15);
+}
+
+.form-message {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: 10px;
+  font-weight: 700;
+}
+
+.form-message-error {
+  background: #fff0f0;
+  color: #a62424;
+  border: 1px solid #f0c4c4;
+}
+
+.form-message-success {
+  background: #ecf9f0;
+  color: #216b3a;
+  border: 1px solid #bfe3ca;
+}
+
+.form-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.staff-submit-button {
+  min-width: 190px;
+  border: 0;
+  cursor: pointer;
+}
+
+.staff-submit-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+@media (max-width: 680px) {
+  .staff-form-card {
+    padding: 20px;
+  }
+
+  .staff-form {
+    grid-template-columns: 1fr;
+  }
+
+  .form-field-full,
+  .form-message,
+  .form-actions {
+    grid-column: auto;
+  }
+
+  .form-actions {
+    justify-content: stretch;
+  }
+
+  .staff-submit-button {
+    width: 100%;
+    min-height: 48px;
+  }
+}
+/* FORM CONVOCAZIONI */
+
+.convocazione-form {
+  display: grid;
+  gap: 22px;
+}
+
+.convocazione-form-section {
+  padding: 26px;
+  background: white;
+  border: 1px solid #dce9f4;
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(12, 74, 127, 0.08);
+}
+
+.convocazione-form-section h3 {
+  margin: 0 0 20px;
+  color: #0c4a7f;
+}
+
+.form-label {
+  color: #16324f;
+  font-weight: 700;
+}
+
+.sede-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.sede-selector button {
+  min-height: 46px;
+  padding: 10px;
+  border: 1px solid #c8d9e8;
+  border-radius: 10px;
+  background: white;
+  color: #0c4a7f;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.sede-selector button.selected {
+  border-color: #0c86c7;
+  background: #0c86c7;
+  color: white;
+}
+
+.partita-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px;
+  border-radius: 12px;
+  background: #eef7fd;
+  color: #0c4a7f;
+}
+
+.partita-preview span,
+.partita-preview small {
+  color: #52697d;
+}
+
+.partita-preview strong {
+  font-size: 1.3rem;
+}
+
+.convocati-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.convocati-heading h3,
+.convocati-heading p {
+  margin: 0;
+}
+
+.convocati-heading p {
+  margin-top: 5px;
+  color: #52697d;
+}
+
+.select-all-button {
+  padding: 10px 14px;
+  border: 1px solid #bcd5e8;
+  border-radius: 9px;
+  background: #eef7fd;
+  color: #0c4a7f;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.giocatori-checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.giocatore-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  padding: 11px 13px;
+  border: 1px solid #d6e4ef;
+  border-radius: 10px;
+  background: #f8fbfd;
+  color: #16324f;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.giocatore-checkbox:has(input:checked) {
+  border-color: #2c8ed6;
+  background: #eaf5fd;
+  color: #0c4a7f;
+}
+
+.giocatore-checkbox input {
+  width: 18px;
+  height: 18px;
+  accent-color: #0c86c7;
+}
+
+@media (max-width: 850px) {
+  .giocatori-checkbox-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 680px) {
+  .convocazione-form-section {
+    padding: 20px;
+  }
+
+  .convocati-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .select-all-button {
+    width: 100%;
+    min-height: 46px;
+  }
+
+  .giocatori-checkbox-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 420px) {
+  .sede-selector {
+    grid-template-columns: 1fr;
+  }
+
+  .giocatori-checkbox-grid {
+    grid-template-columns: 1fr;
+  }
+}

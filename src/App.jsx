@@ -12,6 +12,7 @@ import Contatti from "./pages/Contatti";
 import Staff from "./pages/Staff";
 import LoginStaff from "./pages/LoginStaff";
 import StaffAvvisi from "./pages/StaffAvvisi";
+import StaffConvocazioni from "./pages/StaffConvocazioni";
 
 import "./App.css";
 
@@ -31,6 +32,8 @@ function App() {
           <Route path="/staff" element={<Staff />} />
           <Route path="/login-staff" element={<LoginStaff />} />
           <Route path="/staff/avvisi" element={<StaffAvvisi />} />
+          <Route path="/staff/convocazioni" element={<StaffConvocazioni />}
+/>
         </Routes>
       </main>
 

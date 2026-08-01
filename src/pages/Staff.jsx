@@ -8,10 +8,10 @@ function Staff() {
     <p>Pubblica e modifica gli avvisi destinati alle famiglie.</p>
   </Link>
 
-  <article className="home-card">
-    <h3>📅 Gestione Convocazioni</h3>
-    <p>Crea e aggiorna le convocazioni delle partite.</p>
-  </article>
+<Link to="/staff/convocazioni" className="home-card">
+  <h3>⚽ Gestione Convocazioni</h3>
+  <p>Crea e aggiorna le convocazioni delle partite.</p>
+</Link>
 
   <article className="home-card">
     <h3>👥 Rosa Squadra</h3>
