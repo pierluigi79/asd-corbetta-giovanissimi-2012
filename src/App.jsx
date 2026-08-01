@@ -11,6 +11,7 @@ import Galleria from "./pages/Galleria";
 import Contatti from "./pages/Contatti";
 import Staff from "./pages/Staff";
 import LoginStaff from "./pages/LoginStaff";
+import StaffAvvisi from "./pages/StaffAvvisi";
 
 import "./App.css";
 
@@ -29,6 +30,7 @@ function App() {
           <Route path="/contatti" element={<Contatti />} />
           <Route path="/staff" element={<Staff />} />
           <Route path="/login-staff" element={<LoginStaff />} />
+          <Route path="/staff/avvisi" element={<StaffAvvisi />} />
         </Routes>
       </main>
 
