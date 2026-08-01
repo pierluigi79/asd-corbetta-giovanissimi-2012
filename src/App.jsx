@@ -9,6 +9,8 @@ import Avvisi from "./pages/Avvisi";
 import Convocazioni from "./pages/Convocazioni";
 import Galleria from "./pages/Galleria";
 import Contatti from "./pages/Contatti";
+import Staff from "./pages/Staff";
+import LoginStaff from "./pages/LoginStaff";
 
 import "./App.css";
 
@@ -25,6 +27,8 @@ function App() {
           <Route path="/convocazioni" element={<Convocazioni />} />
           <Route path="/galleria" element={<Galleria />} />
           <Route path="/contatti" element={<Contatti />} />
+          <Route path="/staff" element={<Staff />} />
+          <Route path="/login-staff" element={<LoginStaff />} />
         </Routes>
       </main>
 

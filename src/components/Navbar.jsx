@@ -8,6 +8,7 @@ function Navbar() {
       <NavLink to="/convocazioni">Convocazioni</NavLink>
       <NavLink to="/galleria">Galleria</NavLink>
       <NavLink to="/contatti">Contatti</NavLink>
+      <NavLink to="/login-staff">Area Staff</NavLink>
     </nav>
   );
 }
