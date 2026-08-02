@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 function Home() {
   return (
     <div className="home-page">
@@ -12,13 +13,13 @@ function Home() {
           </p>
 
           <div className="hero-actions">
-            <a href="/convocazioni" className="button button-primary">
-              Vedi convocazioni
-            </a>
+<Link to="/convocazioni" className="button button-primary">
+  Vedi convocazioni
+</Link>
 
-            <a href="/avvisi" className="button button-secondary">
-              Leggi gli avvisi
-            </a>
+<Link to="/avvisi" className="button button-secondary">
+  Leggi gli avvisi
+</Link>
           </div>
         </div>
       </section>
