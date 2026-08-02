@@ -836,3 +836,14 @@ main > section h2 {
   display: grid;
   gap: 28px;
 }
+.staff-toolbar .button-secondary {
+  background: white;
+  color: #0c4a7f;
+  border: 2px solid #0c4a7f;
+  font-weight: 600;
+}
+
+.staff-toolbar .button-secondary:hover {
+  background: #0c4a7f;
+  color: white;
+}
