@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { supabase } from "../lib/supabase";
 
 const giocatori = [
   "Begaj",
@@ -26,6 +27,7 @@ function StaffConvocazioni() {
   const [dataGara, setDataGara] = useState("");
   const [campo, setCampo] = useState("");
   const [indirizzo, setIndirizzo] = useState("");
+  const [comune, setComune] = useState("");
   const [oraRaduno, setOraRaduno] = useState("");
   const [oraGara, setOraGara] = useState("");
   const [preRadunoLuogo, setPreRadunoLuogo] = useState("");
@@ -34,6 +36,9 @@ function StaffConvocazioni() {
   const [note, setNote] = useState(
     "Si raccomanda di avvisare in caso di indisponibilità."
   );
+  const [caricamento, setCaricamento] = useState(false);
+  const [messaggio, setMessaggio] = useState("");
+  const [errore, setErrore] = useState("");
 
   const titoloPartita = useMemo(() => {
     const nomeAvversario = avversario.trim() || "Avversario";
@@ -51,13 +56,61 @@ function StaffConvocazioni() {
     );
   }
 
-  function provaPubblicazione(event) {
-    event.preventDefault();
+  async function pubblicaConvocazione(event) {
+  event.preventDefault();
 
-    alert(
-      `Convocazione pronta: ${titoloPartita}\nConvocati selezionati: ${convocati.length}`
-    );
+  setMessaggio("");
+  setErrore("");
+
+  if (convocati.length === 0) {
+    setErrore("Seleziona almeno un giocatore convocato.");
+    return;
   }
+
+  setCaricamento(true);
+
+  const { error } = await supabase.from("convocazioni").insert({
+    competizione,
+    avversario: avversario.trim(),
+    data_gara: dataGara,
+    ora_ritrovo: oraRaduno,
+    ora_gara: oraGara,
+    campo: campo.trim(),
+    indirizzo: indirizzo.trim(),
+    comune: comune.trim(),
+    note: note.trim() || null,
+    pubblicata: true,
+    sede,
+    pre_raduno_luogo: preRadunoLuogo.trim() || null,
+    pre_raduno_ora: preRadunoOra || null,
+    convocati_nomi: [...convocati].sort((a, b) =>
+      a.localeCompare(b, "it")
+    ),
+  });
+
+  setCaricamento(false);
+
+  if (error) {
+    setErrore(error.message);
+    return;
+  }
+
+  setMessaggio(`Convocazione pubblicata: ${titoloPartita}`);
+
+  setAvversario("");
+  setDataGara("");
+  setCampo("");
+  setIndirizzo("");
+  setComune("");
+  setOraRaduno("");
+  setOraGara("");
+  setPreRadunoLuogo("");
+  setPreRadunoOra("");
+  setConvocati([]);
+  setNote(
+    "Si raccomanda di avvisare in caso di indisponibilità."
+  );
+}
 
   return (
     <section>
@@ -69,7 +122,7 @@ function StaffConvocazioni() {
         </p>
       </div>
 
-      <form className="convocazione-form" onSubmit={provaPubblicazione}>
+      <form className="convocazione-form" onSubmit={pubblicaConvocazione}>
         <div className="convocazione-form-section">
           <h3>Dati della partita</h3>
 
@@ -165,6 +218,18 @@ function StaffConvocazioni() {
                 onChange={(event) => setIndirizzo(event.target.value)}
                 placeholder="Esempio: Via Bixio 17, Vittuone"
                 required
+              />
+            </div>
+
+            <div className="form-field">
+              <label htmlFor="comune">Comune</label>
+             <input
+               id="comune"
+               type="text"
+               value={comune}
+               onChange={(event) => setComune(event.target.value)}
+               placeholder="Esempio: Vittuone"
+               required
               />
             </div>
 
@@ -268,12 +333,23 @@ function StaffConvocazioni() {
           </div>
         </div>
 
+        {errore && (
+          <p className="form-message form-message-error">{errore}</p>
+        )}
+
+        {messaggio && (
+          <p className="form-message form-message-success">{messaggio}</p>
+        )}
+
         <div className="form-actions">
           <button
             className="button button-primary staff-submit-button"
             type="submit"
-          >
-            Pubblica convocazione
+            disabled={caricamento}
+  >
+            {caricamento
+              ? "Pubblicazione in corso..."
+              : "Pubblica convocazione"}
           </button>
         </div>
       </form>

@@ -830,3 +830,9 @@ main > section h2 {
     grid-template-columns: 1fr;
   }
 }
+/* ELENCO CONVOCAZIONI */
+
+.convocazioni-list {
+  display: grid;
+  gap: 28px;
+}
