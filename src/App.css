@@ -847,3 +847,9 @@ main > section h2 {
   background: #0c4a7f;
   color: white;
 }
+.footer-beta {
+  margin-top: 12px;
+  font-size: 0.8rem;
+  opacity: 0.75;
+  font-style: italic;
+}
