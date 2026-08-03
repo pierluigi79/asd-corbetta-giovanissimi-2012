@@ -1,26 +1,10 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabase";
 
-const giocatori = [
-  "Begaj",
-  "Bertolino",
-  "Brunelli",
-  "Fantauzzo",
-  "Fuse",
-  "Garritano",
-  "Marcone",
-  "Metushi",
-  "Pessina",
-  "Ratclif",
-  "Re",
-  "Rebella",
-  "Salis",
-  "Slanzi",
-  "Stucchi",
-  "Vanzaghi",
-];
-
 function StaffConvocazioni() {
+  const [giocatori, setGiocatori] = useState([]);
+  const [caricamentoGiocatori, setCaricamentoGiocatori] = useState(true);
+  const [erroreGiocatori, setErroreGiocatori] = useState("");
   const [competizione, setCompetizione] = useState("Campionato");
   const [sede, setSede] = useState("casa");
   const [avversario, setAvversario] = useState("");
@@ -40,6 +24,29 @@ function StaffConvocazioni() {
   const [messaggio, setMessaggio] = useState("");
   const [errore, setErrore] = useState("");
 
+useEffect(() => {
+  async function caricaGiocatori() {
+    const { data, error } = await supabase
+      .from("persone")
+      .select("id, cognome, nome")
+      .eq("tipo_persona", "giocatore")
+      .eq("attivo", true)
+      .order("cognome", { ascending: true })
+      .order("nome", { ascending: true });
+
+    if (error) {
+      setErroreGiocatori(error.message);
+    } else {
+      setGiocatori(data ?? []);
+    }
+
+    setCaricamentoGiocatori(false);
+  }
+
+  caricaGiocatori();
+}, []);
+
+
   const titoloPartita = useMemo(() => {
     const nomeAvversario = avversario.trim() || "Avversario";
 
@@ -48,13 +55,13 @@ function StaffConvocazioni() {
       : `${nomeAvversario} - Corbetta`;
   }, [avversario, sede]);
 
-  function cambiaConvocato(nome) {
-    setConvocati((precedenti) =>
-      precedenti.includes(nome)
-        ? precedenti.filter((giocatore) => giocatore !== nome)
-        : [...precedenti, nome]
-    );
-  }
+function cambiaConvocato(nomeCompleto) {
+  setConvocati((precedenti) =>
+    precedenti.includes(nomeCompleto)
+      ? precedenti.filter((nome) => nome !== nomeCompleto)
+      : [...precedenti, nomeCompleto]
+  );
+}
 
   async function pubblicaConvocazione(event) {
   event.preventDefault();
@@ -296,8 +303,12 @@ function StaffConvocazioni() {
               className="select-all-button"
               onClick={() =>
                 setConvocati(
-                  convocati.length === giocatori.length ? [] : giocatori
-                )
+  convocati.length === giocatori.length
+    ? []
+    : giocatori.map(
+        (giocatore) => `${giocatore.cognome} ${giocatore.nome}`
+      )
+)
               }
             >
               {convocati.length === giocatori.length
@@ -306,18 +317,38 @@ function StaffConvocazioni() {
             </button>
           </div>
 
-          <div className="giocatori-checkbox-grid">
-            {giocatori.map((giocatore) => (
-              <label key={giocatore} className="giocatore-checkbox">
-                <input
-                  type="checkbox"
-                  checked={convocati.includes(giocatore)}
-                  onChange={() => cambiaConvocato(giocatore)}
-                />
-                <span>{giocatore}</span>
-              </label>
-            ))}
-          </div>
+{caricamentoGiocatori && <p>Caricamento rosa...</p>}
+
+{erroreGiocatori && (
+  <p className="form-message form-message-error">
+    Errore nel caricamento della rosa: {erroreGiocatori}
+  </p>
+)}
+
+{!caricamentoGiocatori &&
+  !erroreGiocatori &&
+  giocatori.length === 0 && <p>Nessun giocatore attivo presente.</p>}
+
+{!caricamentoGiocatori &&
+  !erroreGiocatori &&
+  giocatori.length > 0 && (
+    <div className="giocatori-checkbox-grid">
+      {giocatori.map((giocatore) => {
+        const nomeCompleto = `${giocatore.cognome} ${giocatore.nome}`;
+
+        return (
+          <label key={giocatore.id} className="giocatore-checkbox">
+            <input
+              type="checkbox"
+              checked={convocati.includes(nomeCompleto)}
+              onChange={() => cambiaConvocato(nomeCompleto)}
+            />
+            <span>{nomeCompleto}</span>
+          </label>
+        );
+      })}
+    </div>
+  )}
         </div>
 
         <div className="convocazione-form-section">
