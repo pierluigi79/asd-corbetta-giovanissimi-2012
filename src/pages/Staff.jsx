@@ -38,10 +38,10 @@ function Staff() {
           <p>Pubblica e modifica gli avvisi destinati alle famiglie.</p>
         </Link>
 
-        <article className="home-card">
-          <h3>👥 Rosa Squadra</h3>
-          <p>Gestisci i giocatori della rosa e i loro dati.</p>
-        </article>
+<Link to="/staff/rosa" className="home-card">
+  <h3>👥 Rosa Squadra</h3>
+  <p>Consulta giocatori e componenti dello staff.</p>
+</Link>
       </div>
     </section>
   );

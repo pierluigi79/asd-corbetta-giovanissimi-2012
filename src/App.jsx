@@ -14,6 +14,7 @@ import Staff from "./pages/Staff";
 import LoginStaff from "./pages/LoginStaff";
 import StaffAvvisi from "./pages/StaffAvvisi";
 import StaffConvocazioni from "./pages/StaffConvocazioni";
+import StaffRosa from "./pages/StaffRosa";
 
 import "./App.css";
 
@@ -31,6 +32,9 @@ function App() {
           <Route path="/galleria" element={<Galleria />} />
           <Route path="/contatti" element={<Contatti />} />
           <Route path="/login-staff" element={<LoginStaff />} />
+          <Route path="/staff/rosa" element={<ProtectedRoute> <StaffRosa /> </ProtectedRoute>
+  }
+/>
 
           <Route
             path="/staff"
