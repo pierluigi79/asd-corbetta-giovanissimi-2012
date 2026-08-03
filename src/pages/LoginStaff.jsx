@@ -63,6 +63,9 @@ function LoginStaff() {
           <button className="button button-primary" type="submit">
             {caricamento ? "Accesso in corso..." : "Accedi"}
           </button>
+          <p className="login-help">
+  <a href="#">Password dimenticata?</a>
+</p>
         </form>
       </div>
     </section>

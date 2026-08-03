@@ -901,3 +901,17 @@ main > section h2 {
   background: #f3f3f3;
   color: #666;
 }
+.login-help {
+  text-align: center;
+  margin-top: 18px;
+}
+
+.login-help a {
+  color: #0c4a7f;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.login-help a:hover {
+  text-decoration: underline;
+}
