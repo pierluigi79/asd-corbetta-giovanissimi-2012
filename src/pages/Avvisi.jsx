@@ -76,6 +76,19 @@ function Avvisi() {
             <h3>{avviso.titolo}</h3>
             <p>{avviso.testo}</p>
 
+            {avviso.allegato_url && (
+              <p className="avviso-allegato">
+                <a
+                  href={avviso.allegato_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="button button-secondary"
+                >
+                  📄 {avviso.allegato_nome || "Apri allegato PDF"}
+                </a>
+              </p>
+            )}
+
             {avviso.autore && (
               <p>
                 <small>Pubblicato da {avviso.autore}</small>

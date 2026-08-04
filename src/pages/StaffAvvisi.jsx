@@ -9,35 +9,75 @@ function StaffAvvisi() {
   const [messaggio, setMessaggio] = useState("");
   const [errore, setErrore] = useState("");
   const [caricamento, setCaricamento] = useState(false);
+  const [allegato, setAllegato] = useState(null);
 
-  async function pubblica(event) {
-    event.preventDefault();
+async function pubblica(event) {
+  event.preventDefault();
 
-    setMessaggio("");
-    setErrore("");
-    setCaricamento(true);
+  setMessaggio("");
+  setErrore("");
+  setCaricamento(true);
 
-    const { error } = await supabase.from("avvisi").insert({
-      titolo: titolo.trim(),
-      testo: testo.trim(),
-      categoria,
-      priorita,
-      autore: "Staff",
-    });
+  let allegatoUrl = null;
+  let allegatoNome = null;
 
-    setCaricamento(false);
-
-    if (error) {
-      setErrore(error.message);
+  if (allegato) {
+    if (allegato.type !== "application/pdf") {
+      setErrore("Puoi caricare solo file PDF.");
+      setCaricamento(false);
       return;
     }
 
-    setMessaggio("Avviso pubblicato correttamente.");
-    setTitolo("");
-    setTesto("");
-    setCategoria("Comunicazione");
-    setPriorita("normale");
+    const nomeFileSicuro = allegato.name
+      .toLowerCase()
+      .replace(/[^a-z0-9.-]/g, "-");
+
+    const percorsoFile = `${Date.now()}-${nomeFileSicuro}`;
+
+    const { error: erroreUpload } = await supabase.storage
+      .from("documenti")
+      .upload(percorsoFile, allegato);
+
+    if (erroreUpload) {
+      setErrore(
+        `Errore nel caricamento del PDF: ${erroreUpload.message}`
+      );
+      setCaricamento(false);
+      return;
+    }
+
+    const { data: datiUrl } = supabase.storage
+      .from("documenti")
+      .getPublicUrl(percorsoFile);
+
+    allegatoUrl = datiUrl.publicUrl;
+    allegatoNome = allegato.name;
   }
+
+  const { error } = await supabase.from("avvisi").insert({
+    titolo: titolo.trim(),
+    testo: testo.trim(),
+    categoria,
+    priorita,
+    autore: "Staff",
+    allegato_url: allegatoUrl,
+    allegato_nome: allegatoNome,
+  });
+
+  setCaricamento(false);
+
+  if (error) {
+    setErrore(error.message);
+    return;
+  }
+
+  setMessaggio("Avviso pubblicato correttamente.");
+  setTitolo("");
+  setTesto("");
+  setCategoria("Comunicazione");
+  setPriorita("normale");
+  setAllegato(null);
+}
 
   return (
     <section>
@@ -98,7 +138,22 @@ function StaffAvvisi() {
               required
             />
           </div>
+<div className="form-field form-field-full">
+  <label htmlFor="allegato">Allegato PDF facoltativo</label>
 
+  <input
+    id="allegato"
+    type="file"
+    accept="application/pdf"
+    onChange={(event) =>
+      setAllegato(event.target.files?.[0] ?? null)
+    }
+  />
+
+  {allegato && (
+    <small>File selezionato: {allegato.name}</small>
+  )}
+</div>
           {errore && (
             <p className="form-message form-message-error">{errore}</p>
           )}

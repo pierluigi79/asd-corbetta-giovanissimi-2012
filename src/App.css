@@ -915,3 +915,12 @@ main > section h2 {
 .login-help a:hover {
   text-decoration: underline;
 }
+.avviso-allegato {
+  margin-top: 18px;
+}
+
+.avviso-allegato .button {
+  display: inline-flex;
+  align-items: center;
+  width: auto;
+}

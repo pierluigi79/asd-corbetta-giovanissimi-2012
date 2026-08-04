@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 
 function LoginStaff() {
@@ -63,8 +63,8 @@ function LoginStaff() {
           <button className="button button-primary" type="submit">
             {caricamento ? "Accesso in corso..." : "Accedi"}
           </button>
-          <p className="login-help">
-  <a href="#">Password dimenticata?</a>
+      <p className="login-help">
+  <Link to="/recupera-password">Password dimenticata?</Link>
 </p>
         </form>
       </div>

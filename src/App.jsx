@@ -15,6 +15,8 @@ import LoginStaff from "./pages/LoginStaff";
 import StaffAvvisi from "./pages/StaffAvvisi";
 import StaffConvocazioni from "./pages/StaffConvocazioni";
 import StaffRosa from "./pages/StaffRosa";
+import RecuperaPassword from "./pages/RecuperaPassword";
+import AggiornaPassword from "./pages/AggiornaPassword";
 
 import "./App.css";
 
@@ -62,6 +64,16 @@ function App() {
               </ProtectedRoute>
             }
           />
+<Route
+  path="/recupera-password"
+  element={<RecuperaPassword />}
+/>
+
+<Route
+  path="/aggiorna-password"
+  element={<AggiornaPassword />}
+/>
+
         </Routes>
       </main>
 
