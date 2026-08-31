@@ -109,6 +109,27 @@ function AggiornaPassword() {
     );
   }
 
+  if (messaggio) {
+    return (
+      <section className="login-page">
+        <div className="login-card">
+          <p className="page-kicker">Recupero password</p>
+          <h2>Password aggiornata</h2>
+
+          <p className="form-message form-message-success">
+            {messaggio}
+          </p>
+
+          <p className="login-help">
+            <Link className="button button-primary" to="/login-staff">
+              Torna al login
+            </Link>
+          </p>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="login-page">
       <div className="login-card">
@@ -144,12 +165,6 @@ function AggiornaPassword() {
 
           {errore && <p className="form-error">{errore}</p>}
 
-          {messaggio && (
-            <p className="form-message form-message-success">
-              {messaggio}
-            </p>
-          )}
-
           <button
             className="button button-primary"
             type="submit"
@@ -159,12 +174,6 @@ function AggiornaPassword() {
               ? "Aggiornamento in corso..."
               : "Salva nuova password"}
           </button>
-
-          {messaggio && (
-            <p className="login-help">
-              <Link to="/login-staff">Torna al login</Link>
-            </p>
-          )}
         </form>
       </div>
     </section>
