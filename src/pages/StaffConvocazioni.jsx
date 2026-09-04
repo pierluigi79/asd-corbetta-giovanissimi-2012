@@ -5,6 +5,7 @@ function StaffConvocazioni() {
   const [giocatori, setGiocatori] = useState([]);
   const [caricamentoGiocatori, setCaricamentoGiocatori] = useState(true);
   const [erroreGiocatori, setErroreGiocatori] = useState("");
+
   const [competizione, setCompetizione] = useState("Campionato");
   const [sede, setSede] = useState("casa");
   const [avversario, setAvversario] = useState("");
@@ -16,36 +17,39 @@ function StaffConvocazioni() {
   const [oraGara, setOraGara] = useState("");
   const [preRadunoLuogo, setPreRadunoLuogo] = useState("");
   const [preRadunoOra, setPreRadunoOra] = useState("");
+
+  // Contiene gli UUID dei giocatori selezionati
   const [convocati, setConvocati] = useState([]);
+
   const [note, setNote] = useState(
     "Si raccomanda di avvisare in caso di indisponibilità."
   );
+
   const [caricamento, setCaricamento] = useState(false);
   const [messaggio, setMessaggio] = useState("");
   const [errore, setErrore] = useState("");
 
-useEffect(() => {
-  async function caricaGiocatori() {
-    const { data, error } = await supabase
-      .from("persone")
-      .select("id, cognome, nome")
-      .eq("tipo_persona", "giocatore")
-      .eq("attivo", true)
-      .order("cognome", { ascending: true })
-      .order("nome", { ascending: true });
+  useEffect(() => {
+    async function caricaGiocatori() {
+      const { data, error } = await supabase
+        .from("persone")
+        .select("id, cognome, nome")
+        .eq("tipo_persona", "giocatore")
+        .eq("attivo", true)
+        .order("cognome", { ascending: true })
+        .order("nome", { ascending: true });
 
-    if (error) {
-      setErroreGiocatori(error.message);
-    } else {
-      setGiocatori(data ?? []);
+      if (error) {
+        setErroreGiocatori(error.message);
+      } else {
+        setGiocatori(data ?? []);
+      }
+
+      setCaricamentoGiocatori(false);
     }
 
-    setCaricamentoGiocatori(false);
-  }
-
-  caricaGiocatori();
-}, []);
-
+    caricaGiocatori();
+  }, []);
 
   const titoloPartita = useMemo(() => {
     const nomeAvversario = avversario.trim() || "Avversario";
@@ -55,69 +59,127 @@ useEffect(() => {
       : `${nomeAvversario} - Corbetta`;
   }, [avversario, sede]);
 
-function cambiaConvocato(nomeCompleto) {
-  setConvocati((precedenti) =>
-    precedenti.includes(nomeCompleto)
-      ? precedenti.filter((nome) => nome !== nomeCompleto)
-      : [...precedenti, nomeCompleto]
-  );
-}
+  function cambiaConvocato(giocatoreId) {
+    setConvocati((precedenti) =>
+      precedenti.includes(giocatoreId)
+        ? precedenti.filter((id) => id !== giocatoreId)
+        : [...precedenti, giocatoreId]
+    );
+  }
 
   async function pubblicaConvocazione(event) {
-  event.preventDefault();
+    event.preventDefault();
 
-  setMessaggio("");
-  setErrore("");
+    setMessaggio("");
+    setErrore("");
 
-  if (convocati.length === 0) {
-    setErrore("Seleziona almeno un giocatore convocato.");
-    return;
+    if (convocati.length === 0) {
+      setErrore("Seleziona almeno un giocatore convocato.");
+      return;
+    }
+
+    setCaricamento(true);
+
+    /*
+     * Manteniamo temporaneamente anche convocati_nomi.
+     * La pagina pubblica attuale può così continuare
+     * a funzionare mentre introduciamo la nuova tabella
+     * relazionale convocati.
+     */
+    const nomiConvocati = giocatori
+      .filter((giocatore) => convocati.includes(giocatore.id))
+      .map((giocatore) => `${giocatore.cognome} ${giocatore.nome}`)
+      .sort((a, b) => a.localeCompare(b, "it"));
+
+    /*
+     * 1. Creiamo la convocazione e recuperiamo
+     *    l'ID appena generato da Supabase.
+     */
+    const {
+      data: convocazioneCreata,
+      error: erroreConvocazione,
+    } = await supabase
+      .from("convocazioni")
+      .insert({
+        competizione,
+        avversario: avversario.trim(),
+        data_gara: dataGara,
+        ora_ritrovo: oraRaduno,
+        ora_gara: oraGara,
+        campo: campo.trim(),
+        indirizzo: indirizzo.trim(),
+        comune: comune.trim(),
+        note: note.trim() || null,
+        pubblicata: true,
+        sede,
+        pre_raduno_luogo: preRadunoLuogo.trim() || null,
+        pre_raduno_ora: preRadunoOra || null,
+        convocati_nomi: nomiConvocati,
+      })
+      .select("id")
+      .single();
+
+    if (erroreConvocazione) {
+      setCaricamento(false);
+      setErrore(erroreConvocazione.message);
+      return;
+    }
+
+    /*
+     * 2. Prepariamo una riga della tabella convocati
+     *    per ogni giocatore selezionato.
+     */
+    const righeConvocati = convocati.map((giocatoreId) => ({
+      convocazione_id: convocazioneCreata.id,
+      giocatore_id: giocatoreId,
+    }));
+
+    /*
+     * 3. Salviamo i collegamenti convocazione-giocatore.
+     */
+    const { error: erroreConvocati } = await supabase
+      .from("convocati")
+      .insert(righeConvocati);
+
+    if (erroreConvocati) {
+      /*
+       * Se il secondo salvataggio fallisce, eliminiamo
+       * anche la convocazione appena creata.
+       * Evitiamo così di lasciare una convocazione
+       * incompleta nel database.
+       */
+      await supabase
+        .from("convocazioni")
+        .delete()
+        .eq("id", convocazioneCreata.id);
+
+      setCaricamento(false);
+      setErrore(
+        `Errore nel salvataggio dei convocati: ${erroreConvocati.message}`
+      );
+      return;
+    }
+
+    setCaricamento(false);
+
+    setMessaggio(`Convocazione pubblicata: ${titoloPartita}`);
+
+    setCompetizione("Campionato");
+    setSede("casa");
+    setAvversario("");
+    setDataGara("");
+    setCampo("");
+    setIndirizzo("");
+    setComune("");
+    setOraRaduno("");
+    setOraGara("");
+    setPreRadunoLuogo("");
+    setPreRadunoOra("");
+    setConvocati([]);
+    setNote(
+      "Si raccomanda di avvisare in caso di indisponibilità."
+    );
   }
-
-  setCaricamento(true);
-
-  const { error } = await supabase.from("convocazioni").insert({
-    competizione,
-    avversario: avversario.trim(),
-    data_gara: dataGara,
-    ora_ritrovo: oraRaduno,
-    ora_gara: oraGara,
-    campo: campo.trim(),
-    indirizzo: indirizzo.trim(),
-    comune: comune.trim(),
-    note: note.trim() || null,
-    pubblicata: true,
-    sede,
-    pre_raduno_luogo: preRadunoLuogo.trim() || null,
-    pre_raduno_ora: preRadunoOra || null,
-    convocati_nomi: [...convocati].sort((a, b) =>
-      a.localeCompare(b, "it")
-    ),
-  });
-
-  setCaricamento(false);
-
-  if (error) {
-    setErrore(error.message);
-    return;
-  }
-
-  setMessaggio(`Convocazione pubblicata: ${titoloPartita}`);
-
-  setAvversario("");
-  setDataGara("");
-  setCampo("");
-  setIndirizzo("");
-  setComune("");
-  setOraRaduno("");
-  setOraGara("");
-  setPreRadunoLuogo("");
-  setPreRadunoOra("");
-  setConvocati([]);
-  setNote(
-    "Si raccomanda di avvisare in caso di indisponibilità."
-  );
-}
 
   return (
     <section>
@@ -129,7 +191,10 @@ function cambiaConvocato(nomeCompleto) {
         </p>
       </div>
 
-      <form className="convocazione-form" onSubmit={pubblicaConvocazione}>
+      <form
+        className="convocazione-form"
+        onSubmit={pubblicaConvocazione}
+      >
         <div className="convocazione-form-section">
           <h3>Dati della partita</h3>
 
@@ -139,7 +204,9 @@ function cambiaConvocato(nomeCompleto) {
               <select
                 id="competizione"
                 value={competizione}
-                onChange={(event) => setCompetizione(event.target.value)}
+                onChange={(event) =>
+                  setCompetizione(event.target.value)
+                }
               >
                 <option>Campionato</option>
                 <option>Torneo</option>
@@ -161,7 +228,9 @@ function cambiaConvocato(nomeCompleto) {
 
                 <button
                   type="button"
-                  className={sede === "trasferta" ? "selected" : ""}
+                  className={
+                    sede === "trasferta" ? "selected" : ""
+                  }
                   onClick={() => setSede("trasferta")}
                 >
                   In trasferta
@@ -175,7 +244,9 @@ function cambiaConvocato(nomeCompleto) {
                 id="avversario"
                 type="text"
                 value={avversario}
-                onChange={(event) => setAvversario(event.target.value)}
+                onChange={(event) =>
+                  setAvversario(event.target.value)
+                }
                 placeholder="Esempio: PO Vittuone"
                 required
               />
@@ -187,7 +258,9 @@ function cambiaConvocato(nomeCompleto) {
                 id="data-gara"
                 type="date"
                 value={dataGara}
-                onChange={(event) => setDataGara(event.target.value)}
+                onChange={(event) =>
+                  setDataGara(event.target.value)
+                }
                 required
               />
             </div>
@@ -222,7 +295,9 @@ function cambiaConvocato(nomeCompleto) {
                 id="indirizzo"
                 type="text"
                 value={indirizzo}
-                onChange={(event) => setIndirizzo(event.target.value)}
+                onChange={(event) =>
+                  setIndirizzo(event.target.value)
+                }
                 placeholder="Esempio: Via Bixio 17, Vittuone"
                 required
               />
@@ -230,13 +305,15 @@ function cambiaConvocato(nomeCompleto) {
 
             <div className="form-field">
               <label htmlFor="comune">Comune</label>
-             <input
-               id="comune"
-               type="text"
-               value={comune}
-               onChange={(event) => setComune(event.target.value)}
-               placeholder="Esempio: Vittuone"
-               required
+              <input
+                id="comune"
+                type="text"
+                value={comune}
+                onChange={(event) =>
+                  setComune(event.target.value)
+                }
+                placeholder="Esempio: Vittuone"
+                required
               />
             </div>
 
@@ -246,7 +323,9 @@ function cambiaConvocato(nomeCompleto) {
                 id="ora-raduno"
                 type="time"
                 value={oraRaduno}
-                onChange={(event) => setOraRaduno(event.target.value)}
+                onChange={(event) =>
+                  setOraRaduno(event.target.value)
+                }
                 required
               />
             </div>
@@ -257,7 +336,9 @@ function cambiaConvocato(nomeCompleto) {
                 id="ora-gara"
                 type="time"
                 value={oraGara}
-                onChange={(event) => setOraGara(event.target.value)}
+                onChange={(event) =>
+                  setOraGara(event.target.value)
+                }
                 required
               />
             </div>
@@ -274,7 +355,9 @@ function cambiaConvocato(nomeCompleto) {
                 id="pre-raduno-luogo"
                 type="text"
                 value={preRadunoLuogo}
-                onChange={(event) => setPreRadunoLuogo(event.target.value)}
+                onChange={(event) =>
+                  setPreRadunoLuogo(event.target.value)
+                }
                 placeholder="Esempio: Corbetta, via Repubblica"
               />
             </div>
@@ -285,7 +368,9 @@ function cambiaConvocato(nomeCompleto) {
                 id="pre-raduno-ora"
                 type="time"
                 value={preRadunoOra}
-                onChange={(event) => setPreRadunoOra(event.target.value)}
+                onChange={(event) =>
+                  setPreRadunoOra(event.target.value)
+                }
               />
             </div>
           </div>
@@ -303,12 +388,10 @@ function cambiaConvocato(nomeCompleto) {
               className="select-all-button"
               onClick={() =>
                 setConvocati(
-  convocati.length === giocatori.length
-    ? []
-    : giocatori.map(
-        (giocatore) => `${giocatore.cognome} ${giocatore.nome}`
-      )
-)
+                  convocati.length === giocatori.length
+                    ? []
+                    : giocatori.map((giocatore) => giocatore.id)
+                )
               }
             >
               {convocati.length === giocatori.length
@@ -317,38 +400,48 @@ function cambiaConvocato(nomeCompleto) {
             </button>
           </div>
 
-{caricamentoGiocatori && <p>Caricamento rosa...</p>}
+          {caricamentoGiocatori && <p>Caricamento rosa...</p>}
 
-{erroreGiocatori && (
-  <p className="form-message form-message-error">
-    Errore nel caricamento della rosa: {erroreGiocatori}
-  </p>
-)}
+          {erroreGiocatori && (
+            <p className="form-message form-message-error">
+              Errore nel caricamento della rosa:{" "}
+              {erroreGiocatori}
+            </p>
+          )}
 
-{!caricamentoGiocatori &&
-  !erroreGiocatori &&
-  giocatori.length === 0 && <p>Nessun giocatore attivo presente.</p>}
+          {!caricamentoGiocatori &&
+            !erroreGiocatori &&
+            giocatori.length === 0 && (
+              <p>Nessun giocatore attivo presente.</p>
+            )}
 
-{!caricamentoGiocatori &&
-  !erroreGiocatori &&
-  giocatori.length > 0 && (
-    <div className="giocatori-checkbox-grid">
-      {giocatori.map((giocatore) => {
-        const nomeCompleto = `${giocatore.cognome} ${giocatore.nome}`;
+          {!caricamentoGiocatori &&
+            !erroreGiocatori &&
+            giocatori.length > 0 && (
+              <div className="giocatori-checkbox-grid">
+                {giocatori.map((giocatore) => {
+                  const nomeCompleto =
+                    `${giocatore.cognome} ${giocatore.nome}`;
 
-        return (
-          <label key={giocatore.id} className="giocatore-checkbox">
-            <input
-              type="checkbox"
-              checked={convocati.includes(nomeCompleto)}
-              onChange={() => cambiaConvocato(nomeCompleto)}
-            />
-            <span>{nomeCompleto}</span>
-          </label>
-        );
-      })}
-    </div>
-  )}
+                  return (
+                    <label
+                      key={giocatore.id}
+                      className="giocatore-checkbox"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={convocati.includes(giocatore.id)}
+                        onChange={() =>
+                          cambiaConvocato(giocatore.id)
+                        }
+                      />
+
+                      <span>{nomeCompleto}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            )}
         </div>
 
         <div className="convocazione-form-section">
@@ -365,11 +458,15 @@ function cambiaConvocato(nomeCompleto) {
         </div>
 
         {errore && (
-          <p className="form-message form-message-error">{errore}</p>
+          <p className="form-message form-message-error">
+            {errore}
+          </p>
         )}
 
         {messaggio && (
-          <p className="form-message form-message-success">{messaggio}</p>
+          <p className="form-message form-message-success">
+            {messaggio}
+          </p>
         )}
 
         <div className="form-actions">
@@ -377,7 +474,7 @@ function cambiaConvocato(nomeCompleto) {
             className="button button-primary staff-submit-button"
             type="submit"
             disabled={caricamento}
-  >
+          >
             {caricamento
               ? "Pubblicazione in corso..."
               : "Pubblica convocazione"}
