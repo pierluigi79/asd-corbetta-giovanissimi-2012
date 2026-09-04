@@ -17,6 +17,7 @@ import StaffConvocazioni from "./pages/StaffConvocazioni";
 import StaffRosa from "./pages/StaffRosa";
 import RecuperaPassword from "./pages/RecuperaPassword";
 import AggiornaPassword from "./pages/AggiornaPassword";
+import ImpostaPassword from "./pages/ImpostaPassword";
 
 import "./App.css";
 
@@ -33,10 +34,23 @@ function App() {
           <Route path="/convocazioni" element={<Convocazioni />} />
           <Route path="/galleria" element={<Galleria />} />
           <Route path="/contatti" element={<Contatti />} />
+
           <Route path="/login-staff" element={<LoginStaff />} />
-          <Route path="/staff/rosa" element={<ProtectedRoute> <StaffRosa /> </ProtectedRoute>
-  }
-/>
+
+          <Route
+            path="/recupera-password"
+            element={<RecuperaPassword />}
+          />
+
+          <Route
+            path="/aggiorna-password"
+            element={<AggiornaPassword />}
+          />
+
+          <Route
+            path="/imposta-password"
+            element={<ImpostaPassword />}
+          />
 
           <Route
             path="/staff"
@@ -64,16 +78,15 @@ function App() {
               </ProtectedRoute>
             }
           />
-<Route
-  path="/recupera-password"
-  element={<RecuperaPassword />}
-/>
 
-<Route
-  path="/aggiorna-password"
-  element={<AggiornaPassword />}
-/>
-
+          <Route
+            path="/staff/rosa"
+            element={
+              <ProtectedRoute>
+                <StaffRosa />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </main>
 
