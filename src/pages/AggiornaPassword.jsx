@@ -5,6 +5,7 @@ import { supabase } from "../lib/supabase";
 function AggiornaPassword() {
   const [password, setPassword] = useState("");
   const [confermaPassword, setConfermaPassword] = useState("");
+  const [mostraPassword, setMostraPassword] = useState(false);
   const [recuperoValido, setRecuperoValido] = useState(false);
   const [verificaInCorso, setVerificaInCorso] = useState(true);
   const [caricamento, setCaricamento] = useState(false);
@@ -140,7 +141,7 @@ function AggiornaPassword() {
           <label htmlFor="nuova-password">Nuova password</label>
           <input
             id="nuova-password"
-            type="password"
+            type={mostraPassword ? "text" : "password"}
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             autoComplete="new-password"
@@ -153,7 +154,7 @@ function AggiornaPassword() {
           </label>
           <input
             id="conferma-password"
-            type="password"
+            type={mostraPassword ? "text" : "password"}
             value={confermaPassword}
             onChange={(event) =>
               setConfermaPassword(event.target.value)
@@ -162,6 +163,17 @@ function AggiornaPassword() {
             minLength="8"
             required
           />
+
+          <label className="show-password">
+            <input
+              type="checkbox"
+              checked={mostraPassword}
+              onChange={(event) =>
+                setMostraPassword(event.target.checked)
+              }
+            />
+            Mostra password
+          </label>
 
           {errore && <p className="form-error">{errore}</p>}
 

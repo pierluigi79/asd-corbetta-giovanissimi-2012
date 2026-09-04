@@ -5,6 +5,7 @@ import { supabase } from "../lib/supabase";
 function LoginStaff() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [mostraPassword, setMostraPassword] = useState(false);
   const [errore, setErrore] = useState("");
   const [caricamento, setCaricamento] = useState(false);
 
@@ -51,21 +52,35 @@ function LoginStaff() {
           <label htmlFor="password">Password</label>
           <input
             id="password"
-            type="password"
+            type={mostraPassword ? "text" : "password"}
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             autoComplete="current-password"
             required
           />
 
+          <label className="show-password">
+            <input
+              type="checkbox"
+              checked={mostraPassword}
+              onChange={(event) => setMostraPassword(event.target.checked)}
+            />
+            Mostra password
+          </label>
+
           {errore && <p className="form-error">{errore}</p>}
 
-          <button className="button button-primary" type="submit">
+          <button
+            className="button button-primary"
+            type="submit"
+            disabled={caricamento}
+          >
             {caricamento ? "Accesso in corso..." : "Accedi"}
           </button>
-      <p className="login-help">
-  <Link to="/recupera-password">Password dimenticata?</Link>
-</p>
+
+          <p className="login-help">
+            <Link to="/recupera-password">Password dimenticata?</Link>
+          </p>
         </form>
       </div>
     </section>
