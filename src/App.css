@@ -924,3 +924,327 @@ main > section h2 {
   align-items: center;
   width: auto;
 }
+
+/* Dati riservati Staff nella convocazione */
+
+.dati-convocati-heading {
+  margin-bottom: 18px;
+}
+
+.dati-convocati-heading h3 {
+  margin-bottom: 6px;
+}
+
+.dati-convocati-heading p {
+  margin: 0;
+  color: #5d6b7a;
+}
+
+.dati-convocati-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dati-convocati-header,
+.dati-convocato-row {
+  display: grid;
+  grid-template-columns: minmax(220px, 2fr) 100px 120px 100px;
+  gap: 16px;
+  align-items: center;
+}
+
+.dati-convocati-header {
+  padding: 0 16px 8px;
+  font-weight: 700;
+  color: #17477c;
+}
+
+.dati-convocato-row {
+  padding: 14px 16px;
+  border: 1px solid #d8e2ee;
+  border-radius: 12px;
+  background: #f8fbff;
+}
+
+.maglia-input {
+  width: 80px;
+  min-width: 80px;
+  padding: 9px 10px;
+  text-align: center;
+  font-size: 1rem;
+}
+
+.ruolo-radio {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+}
+
+.ruolo-radio input {
+  width: 18px;
+  height: 18px;
+}
+
+/* Smartphone */
+
+@media (max-width: 700px) {
+  .dati-convocati-header {
+    display: none;
+  }
+
+  .dati-convocato-row {
+    grid-template-columns: 1fr 90px;
+    gap: 12px;
+  }
+
+  .dati-convocato-row strong {
+    grid-column: 1 / -1;
+  }
+
+  .maglia-input {
+    width: 82px;
+    min-width: 82px;
+  }
+
+  .ruolo-radio {
+    min-height: 36px;
+  }
+}
+/* Elenco convocazioni - Area Staff */
+
+.staff-page-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 24px;
+}
+
+.staff-convocazioni-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.staff-convocazione-card {
+  padding: 20px;
+  border: 1px solid #d8e2ee;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.staff-convocazione-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.staff-convocazione-card-top h3 {
+  margin: 4px 0 0;
+}
+
+.staff-convocazione-competizione {
+  margin: 0;
+  color: #5d6b7a;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.convocazione-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.convocazione-status.pubblicata {
+  background: #e8f7ed;
+  color: #24713d;
+}
+
+.convocazione-status.bozza {
+  background: #fff3d6;
+  color: #8a6200;
+}
+
+.staff-convocazione-info {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px 24px;
+}
+
+.staff-convocazione-info p {
+  margin: 0;
+}
+
+.staff-convocazione-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 18px;
+}
+
+@media (max-width: 700px) {
+  .staff-page-actions {
+    justify-content: stretch;
+  }
+
+  .staff-page-actions .button {
+    width: 100%;
+    text-align: center;
+  }
+
+  .staff-convocazione-card-top {
+    flex-direction: column;
+  }
+
+  .staff-convocazione-info {
+    grid-template-columns: 1fr;
+    gap: 7px;
+  }
+
+  .staff-convocazione-actions {
+    justify-content: stretch;
+  }
+
+  .staff-convocazione-actions .button {
+    width: 100%;
+    text-align: center;
+  }
+}
+/* Dettaglio convocazione - Area Staff */
+
+.staff-dettaglio-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.staff-dettaglio-card {
+  margin-bottom: 18px;
+  padding: 20px;
+  border: 1px solid #d8e2ee;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.staff-dettaglio-card h3 {
+  margin-top: 0;
+}
+
+.staff-dettaglio-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.staff-dettaglio-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.staff-dettaglio-grid span {
+  font-size: 0.85rem;
+  color: #667789;
+}
+
+.staff-convocati-completi {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.staff-convocati-completi-header,
+.staff-convocato-completo-row {
+  display: grid;
+  grid-template-columns: minmax(220px, 2fr) 100px minmax(150px, 1fr);
+  gap: 16px;
+  align-items: center;
+}
+
+.staff-convocati-completi-header {
+  padding: 0 14px 8px;
+  font-weight: 700;
+  color: #17477c;
+}
+
+.staff-convocato-completo-row {
+  min-height: 54px;
+  padding: 12px 14px;
+  border: 1px solid #d8e2ee;
+  border-radius: 10px;
+  background: #f8fbff;
+}
+
+.numero-maglia-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 34px;
+  border-radius: 8px;
+  background: #e8f2fc;
+  font-weight: 800;
+  color: #17477c;
+}
+
+.ruolo-staff {
+  font-weight: 600;
+  color: #667789;
+}
+
+.ruolo-staff.evidenza {
+  color: #17477c;
+  font-weight: 800;
+}
+
+.staff-dettaglio-meta {
+  color: #667789;
+  font-size: 0.9rem;
+}
+
+.staff-dettaglio-meta p {
+  margin: 4px 0;
+}
+
+@media (max-width: 700px) {
+  .staff-dettaglio-top {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .staff-dettaglio-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .staff-convocati-completi-header {
+    display: none;
+  }
+
+  .staff-convocato-completo-row {
+    grid-template-columns: 1fr 55px;
+    gap: 8px 12px;
+  }
+
+  .staff-convocato-completo-row strong {
+    grid-column: 1;
+  }
+
+  .numero-maglia-badge {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .ruolo-staff {
+    grid-column: 1 / -1;
+  }
+}

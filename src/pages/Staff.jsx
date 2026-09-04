@@ -29,19 +29,35 @@ function Staff() {
 
       <div className="home-cards">
         <Link to="/staff/convocazioni" className="home-card">
-          <h3>⚽ Gestione Convocazioni</h3>
-          <p>Crea e aggiorna le convocazioni delle partite.</p>
+          <h3>➕ Nuova Convocazione</h3>
+          <p>
+            Crea una nuova convocazione e assegna i dati riservati
+            allo Staff.
+          </p>
+        </Link>
+
+        <Link
+          to="/staff/convocazioni-elenco"
+          className="home-card"
+        >
+          <h3>⚽ Gestisci Convocazioni</h3>
+          <p>
+            Consulta le convocazioni già create e apri il dettaglio
+            completo riservato allo Staff.
+          </p>
         </Link>
 
         <Link to="/staff/avvisi" className="home-card">
           <h3>📢 Gestione Avvisi</h3>
-          <p>Pubblica e modifica gli avvisi destinati alle famiglie.</p>
+          <p>
+            Pubblica e modifica gli avvisi destinati alle famiglie.
+          </p>
         </Link>
 
-<Link to="/staff/rosa" className="home-card">
-  <h3>👥 Rosa Squadra</h3>
-  <p>Consulta giocatori e componenti dello staff.</p>
-</Link>
+        <Link to="/staff/rosa" className="home-card">
+          <h3>👥 Rosa Squadra</h3>
+          <p>Consulta giocatori e componenti dello staff.</p>
+        </Link>
       </div>
     </section>
   );

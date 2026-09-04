@@ -18,8 +18,10 @@ function StaffConvocazioni() {
   const [preRadunoLuogo, setPreRadunoLuogo] = useState("");
   const [preRadunoOra, setPreRadunoOra] = useState("");
 
-  // Contiene gli UUID dei giocatori selezionati
   const [convocati, setConvocati] = useState([]);
+  const [numeriMaglia, setNumeriMaglia] = useState({});
+  const [capitanoId, setCapitanoId] = useState("");
+  const [viceCapitanoId, setViceCapitanoId] = useState("");
 
   const [note, setNote] = useState(
     "Si raccomanda di avvisare in caso di indisponibilità."
@@ -59,12 +61,114 @@ function StaffConvocazioni() {
       : `${nomeAvversario} - Corbetta`;
   }, [avversario, sede]);
 
+  const giocatoriConvocati = useMemo(
+    () =>
+      giocatori.filter((giocatore) =>
+        convocati.includes(giocatore.id)
+      ),
+    [giocatori, convocati]
+  );
+
   function cambiaConvocato(giocatoreId) {
-    setConvocati((precedenti) =>
-      precedenti.includes(giocatoreId)
-        ? precedenti.filter((id) => id !== giocatoreId)
-        : [...precedenti, giocatoreId]
+    setConvocati((precedenti) => {
+      if (precedenti.includes(giocatoreId)) {
+        setNumeriMaglia((numeriPrecedenti) => {
+          const nuoviNumeri = { ...numeriPrecedenti };
+          delete nuoviNumeri[giocatoreId];
+          return nuoviNumeri;
+        });
+
+        if (capitanoId === giocatoreId) {
+          setCapitanoId("");
+        }
+
+        if (viceCapitanoId === giocatoreId) {
+          setViceCapitanoId("");
+        }
+
+        return precedenti.filter((id) => id !== giocatoreId);
+      }
+
+      return [...precedenti, giocatoreId];
+    });
+  }
+
+  function cambiaNumeroMaglia(giocatoreId, valore) {
+    setNumeriMaglia((precedenti) => ({
+      ...precedenti,
+      [giocatoreId]: valore,
+    }));
+  }
+
+  function selezionaCapitano(giocatoreId) {
+    setCapitanoId(giocatoreId);
+
+    if (viceCapitanoId === giocatoreId) {
+      setViceCapitanoId("");
+    }
+  }
+
+  function selezionaViceCapitano(giocatoreId) {
+    setViceCapitanoId(giocatoreId);
+
+    if (capitanoId === giocatoreId) {
+      setCapitanoId("");
+    }
+  }
+
+  function selezionaTutti() {
+    if (convocati.length === giocatori.length) {
+      setConvocati([]);
+      setNumeriMaglia({});
+      setCapitanoId("");
+      setViceCapitanoId("");
+      return;
+    }
+
+    setConvocati(giocatori.map((giocatore) => giocatore.id));
+  }
+
+  function validaConvocati() {
+    for (const giocatoreId of convocati) {
+      const numero = String(
+        numeriMaglia[giocatoreId] ?? ""
+      ).trim();
+
+      if (!numero) {
+        return "Assegna un numero di maglia a tutti i giocatori convocati.";
+      }
+
+      const numeroConvertito = Number(numero);
+
+      if (
+        !Number.isInteger(numeroConvertito) ||
+        numeroConvertito <= 0
+      ) {
+        return "I numeri di maglia devono essere numeri interi maggiori di zero.";
+      }
+    }
+
+    const numeri = convocati.map((giocatoreId) =>
+      Number(numeriMaglia[giocatoreId])
     );
+
+    if (new Set(numeri).size !== numeri.length) {
+      return "Non puoi assegnare lo stesso numero di maglia a due giocatori.";
+    }
+
+    if (!capitanoId) {
+      return "Seleziona il capitano.";
+    }
+
+    if (!viceCapitanoId) {
+      return "Seleziona il vice capitano.";
+    }
+
+    if (capitanoId === viceCapitanoId) {
+      return "Capitano e vice capitano devono essere due giocatori diversi.";
+    }
+
+    return "";
   }
 
   async function pubblicaConvocazione(event) {
@@ -78,23 +182,22 @@ function StaffConvocazioni() {
       return;
     }
 
+    const erroreValidazione = validaConvocati();
+
+    if (erroreValidazione) {
+      setErrore(erroreValidazione);
+      return;
+    }
+
     setCaricamento(true);
 
-    /*
-     * Manteniamo temporaneamente anche convocati_nomi.
-     * La pagina pubblica attuale può così continuare
-     * a funzionare mentre introduciamo la nuova tabella
-     * relazionale convocati.
-     */
-    const nomiConvocati = giocatori
-      .filter((giocatore) => convocati.includes(giocatore.id))
-      .map((giocatore) => `${giocatore.cognome} ${giocatore.nome}`)
+    const nomiConvocati = giocatoriConvocati
+      .map(
+        (giocatore) =>
+          `${giocatore.cognome} ${giocatore.nome}`
+      )
       .sort((a, b) => a.localeCompare(b, "it"));
 
-    /*
-     * 1. Creiamo la convocazione e recuperiamo
-     *    l'ID appena generato da Supabase.
-     */
     const {
       data: convocazioneCreata,
       error: erroreConvocazione,
@@ -112,7 +215,8 @@ function StaffConvocazioni() {
         note: note.trim() || null,
         pubblicata: true,
         sede,
-        pre_raduno_luogo: preRadunoLuogo.trim() || null,
+        pre_raduno_luogo:
+          preRadunoLuogo.trim() || null,
         pre_raduno_ora: preRadunoOra || null,
         convocati_nomi: nomiConvocati,
       })
@@ -125,29 +229,25 @@ function StaffConvocazioni() {
       return;
     }
 
-    /*
-     * 2. Prepariamo una riga della tabella convocati
-     *    per ogni giocatore selezionato.
-     */
-    const righeConvocati = convocati.map((giocatoreId) => ({
-      convocazione_id: convocazioneCreata.id,
-      giocatore_id: giocatoreId,
-    }));
+    const righeConvocati = convocati.map(
+      (giocatoreId) => ({
+        convocazione_id: convocazioneCreata.id,
+        giocatore_id: giocatoreId,
+        numero_maglia: Number(
+          numeriMaglia[giocatoreId]
+        ),
+        capitano: giocatoreId === capitanoId,
+        vice_capitano:
+          giocatoreId === viceCapitanoId,
+      })
+    );
 
-    /*
-     * 3. Salviamo i collegamenti convocazione-giocatore.
-     */
-    const { error: erroreConvocati } = await supabase
-      .from("convocati")
-      .insert(righeConvocati);
+    const { error: erroreConvocati } =
+      await supabase
+        .from("convocati")
+        .insert(righeConvocati);
 
     if (erroreConvocati) {
-      /*
-       * Se il secondo salvataggio fallisce, eliminiamo
-       * anche la convocazione appena creata.
-       * Evitiamo così di lasciare una convocazione
-       * incompleta nel database.
-       */
       await supabase
         .from("convocazioni")
         .delete()
@@ -162,7 +262,9 @@ function StaffConvocazioni() {
 
     setCaricamento(false);
 
-    setMessaggio(`Convocazione pubblicata: ${titoloPartita}`);
+    setMessaggio(
+      `Convocazione pubblicata: ${titoloPartita}`
+    );
 
     setCompetizione("Campionato");
     setSede("casa");
@@ -176,6 +278,9 @@ function StaffConvocazioni() {
     setPreRadunoLuogo("");
     setPreRadunoOra("");
     setConvocati([]);
+    setNumeriMaglia({});
+    setCapitanoId("");
+    setViceCapitanoId("");
     setNote(
       "Si raccomanda di avvisare in caso di indisponibilità."
     );
@@ -187,7 +292,8 @@ function StaffConvocazioni() {
         <p className="page-kicker">Area Staff</p>
         <h2>⚽ Nuova convocazione</h2>
         <p>
-          Compila i dati della gara e seleziona i giocatori convocati.
+          Compila i dati della gara e seleziona i
+          giocatori convocati.
         </p>
       </div>
 
@@ -200,7 +306,9 @@ function StaffConvocazioni() {
 
           <div className="staff-form">
             <div className="form-field">
-              <label htmlFor="competizione">Competizione</label>
+              <label htmlFor="competizione">
+                Competizione
+              </label>
               <select
                 id="competizione"
                 value={competizione}
@@ -215,12 +323,16 @@ function StaffConvocazioni() {
             </div>
 
             <div className="form-field">
-              <span className="form-label">Dove si gioca?</span>
+              <span className="form-label">
+                Dove si gioca?
+              </span>
 
               <div className="sede-selector">
                 <button
                   type="button"
-                  className={sede === "casa" ? "selected" : ""}
+                  className={
+                    sede === "casa" ? "selected" : ""
+                  }
                   onClick={() => setSede("casa")}
                 >
                   In casa
@@ -229,9 +341,13 @@ function StaffConvocazioni() {
                 <button
                   type="button"
                   className={
-                    sede === "trasferta" ? "selected" : ""
+                    sede === "trasferta"
+                      ? "selected"
+                      : ""
                   }
-                  onClick={() => setSede("trasferta")}
+                  onClick={() =>
+                    setSede("trasferta")
+                  }
                 >
                   In trasferta
                 </button>
@@ -239,7 +355,9 @@ function StaffConvocazioni() {
             </div>
 
             <div className="form-field">
-              <label htmlFor="avversario">Avversario</label>
+              <label htmlFor="avversario">
+                Avversario
+              </label>
               <input
                 id="avversario"
                 type="text"
@@ -283,14 +401,18 @@ function StaffConvocazioni() {
                 id="campo"
                 type="text"
                 value={campo}
-                onChange={(event) => setCampo(event.target.value)}
+                onChange={(event) =>
+                  setCampo(event.target.value)
+                }
                 placeholder="Esempio: Oratorio Vittuone"
                 required
               />
             </div>
 
             <div className="form-field">
-              <label htmlFor="indirizzo">Indirizzo</label>
+              <label htmlFor="indirizzo">
+                Indirizzo
+              </label>
               <input
                 id="indirizzo"
                 type="text"
@@ -318,7 +440,9 @@ function StaffConvocazioni() {
             </div>
 
             <div className="form-field">
-              <label htmlFor="ora-raduno">Ora raduno</label>
+              <label htmlFor="ora-raduno">
+                Ora raduno
+              </label>
               <input
                 id="ora-raduno"
                 type="time"
@@ -331,7 +455,9 @@ function StaffConvocazioni() {
             </div>
 
             <div className="form-field">
-              <label htmlFor="ora-gara">Ora partita</label>
+              <label htmlFor="ora-gara">
+                Ora partita
+              </label>
               <input
                 id="ora-gara"
                 type="time"
@@ -350,26 +476,34 @@ function StaffConvocazioni() {
 
           <div className="staff-form">
             <div className="form-field">
-              <label htmlFor="pre-raduno-luogo">Luogo</label>
+              <label htmlFor="pre-raduno-luogo">
+                Luogo
+              </label>
               <input
                 id="pre-raduno-luogo"
                 type="text"
                 value={preRadunoLuogo}
                 onChange={(event) =>
-                  setPreRadunoLuogo(event.target.value)
+                  setPreRadunoLuogo(
+                    event.target.value
+                  )
                 }
                 placeholder="Esempio: Corbetta, via Repubblica"
               />
             </div>
 
             <div className="form-field">
-              <label htmlFor="pre-raduno-ora">Ora</label>
+              <label htmlFor="pre-raduno-ora">
+                Ora
+              </label>
               <input
                 id="pre-raduno-ora"
                 type="time"
                 value={preRadunoOra}
                 onChange={(event) =>
-                  setPreRadunoOra(event.target.value)
+                  setPreRadunoOra(
+                    event.target.value
+                  )
                 }
               />
             </div>
@@ -386,13 +520,7 @@ function StaffConvocazioni() {
             <button
               type="button"
               className="select-all-button"
-              onClick={() =>
-                setConvocati(
-                  convocati.length === giocatori.length
-                    ? []
-                    : giocatori.map((giocatore) => giocatore.id)
-                )
-              }
+              onClick={selezionaTutti}
             >
               {convocati.length === giocatori.length
                 ? "Deseleziona tutti"
@@ -400,7 +528,9 @@ function StaffConvocazioni() {
             </button>
           </div>
 
-          {caricamentoGiocatori && <p>Caricamento rosa...</p>}
+          {caricamentoGiocatori && (
+            <p>Caricamento rosa...</p>
+          )}
 
           {erroreGiocatori && (
             <p className="form-message form-message-error">
@@ -412,7 +542,9 @@ function StaffConvocazioni() {
           {!caricamentoGiocatori &&
             !erroreGiocatori &&
             giocatori.length === 0 && (
-              <p>Nessun giocatore attivo presente.</p>
+              <p>
+                Nessun giocatore attivo presente.
+              </p>
             )}
 
           {!caricamentoGiocatori &&
@@ -430,12 +562,15 @@ function StaffConvocazioni() {
                     >
                       <input
                         type="checkbox"
-                        checked={convocati.includes(giocatore.id)}
+                        checked={convocati.includes(
+                          giocatore.id
+                        )}
                         onChange={() =>
-                          cambiaConvocato(giocatore.id)
+                          cambiaConvocato(
+                            giocatore.id
+                          )
                         }
                       />
-
                       <span>{nomeCompleto}</span>
                     </label>
                   );
@@ -444,6 +579,98 @@ function StaffConvocazioni() {
             )}
         </div>
 
+        {giocatoriConvocati.length > 0 && (
+          <div className="convocazione-form-section">
+            <div className="dati-convocati-heading">
+              <div>
+                <h3>Dati riservati Staff</h3>
+                <p>
+                  Numero di maglia, capitano e vice
+                  capitano non saranno visibili alle
+                  famiglie.
+                </p>
+              </div>
+            </div>
+
+            <div className="dati-convocati-list">
+              <div className="dati-convocati-header">
+                <span>Giocatore</span>
+                <span>Maglia</span>
+                <span>Capitano</span>
+                <span>Vice</span>
+              </div>
+
+              {giocatoriConvocati.map(
+                (giocatore) => (
+                  <div
+                    key={giocatore.id}
+                    className="dati-convocato-row"
+                  >
+                    <strong>
+                      {giocatore.cognome}{" "}
+                      {giocatore.nome}
+                    </strong>
+
+                    <input
+                      className="maglia-input"
+                      type="number"
+                      min="1"
+                      step="1"
+                      inputMode="numeric"
+                      value={
+                        numeriMaglia[
+                          giocatore.id
+                        ] ?? ""
+                      }
+                      onChange={(event) =>
+                        cambiaNumeroMaglia(
+                          giocatore.id,
+                          event.target.value
+                        )
+                      }
+                      aria-label={`Numero maglia di ${giocatore.cognome} ${giocatore.nome}`}
+                    />
+
+                    <label className="ruolo-radio">
+                      <input
+                        type="radio"
+                        name="capitano"
+                        checked={
+                          capitanoId ===
+                          giocatore.id
+                        }
+                        onChange={() =>
+                          selezionaCapitano(
+                            giocatore.id
+                          )
+                        }
+                      />
+                      <span>Capitano</span>
+                    </label>
+
+                    <label className="ruolo-radio">
+                      <input
+                        type="radio"
+                        name="vice-capitano"
+                        checked={
+                          viceCapitanoId ===
+                          giocatore.id
+                        }
+                        onChange={() =>
+                          selezionaViceCapitano(
+                            giocatore.id
+                          )
+                        }
+                      />
+                      <span>Vice</span>
+                    </label>
+                  </div>
+                )
+              )}
+            </div>
+          </div>
+        )}
+
         <div className="convocazione-form-section">
           <div className="form-field">
             <label htmlFor="note">Note</label>
@@ -451,7 +678,9 @@ function StaffConvocazioni() {
               id="note"
               rows="6"
               value={note}
-              onChange={(event) => setNote(event.target.value)}
+              onChange={(event) =>
+                setNote(event.target.value)
+              }
               placeholder="Inserisci eventuali comunicazioni aggiuntive..."
             />
           </div>

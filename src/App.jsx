@@ -14,6 +14,8 @@ import Staff from "./pages/Staff";
 import LoginStaff from "./pages/LoginStaff";
 import StaffAvvisi from "./pages/StaffAvvisi";
 import StaffConvocazioni from "./pages/StaffConvocazioni";
+import StaffConvocazioniElenco from "./pages/StaffConvocazioniElenco";
+import StaffConvocazioneDettaglio from "./pages/StaffConvocazioneDettaglio";
 import StaffRosa from "./pages/StaffRosa";
 import RecuperaPassword from "./pages/RecuperaPassword";
 import AggiornaPassword from "./pages/AggiornaPassword";
@@ -75,6 +77,24 @@ function App() {
             element={
               <ProtectedRoute>
                 <StaffConvocazioni />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/staff/convocazioni-elenco"
+            element={
+              <ProtectedRoute>
+                <StaffConvocazioniElenco />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/staff/convocazione/:id"
+            element={
+              <ProtectedRoute>
+                <StaffConvocazioneDettaglio />
               </ProtectedRoute>
             }
           />
