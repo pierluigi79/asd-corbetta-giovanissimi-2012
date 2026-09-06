@@ -282,7 +282,7 @@ function StaffConvocazioneDettaglio() {
 
       <div className="staff-dettaglio-top">
         <Link
-          className="button button-secondary"
+          className="button button-secondary staff-back-button"
           to="/staff/convocazioni-elenco"
         >
           ← Torna alle convocazioni
