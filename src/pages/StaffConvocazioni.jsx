@@ -1,15 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 
-function StaffConvocazioneModifica() {
-  const { id } = useParams();
-  const navigate = useNavigate();
-
+function StaffConvocazioni() {
   const [giocatori, setGiocatori] = useState([]);
-  const [caricamento, setCaricamento] = useState(true);
-  const [salvataggio, setSalvataggio] = useState(false);
-  const [pubblicazione, setPubblicazione] = useState(false);
+  const [caricamentoGiocatori, setCaricamentoGiocatori] = useState(true);
+  const [erroreGiocatori, setErroreGiocatori] = useState("");
 
   const [competizione, setCompetizione] = useState("Campionato");
   const [sede, setSede] = useState("casa");
@@ -28,155 +23,35 @@ function StaffConvocazioneModifica() {
   const [capitanoId, setCapitanoId] = useState("");
   const [viceCapitanoId, setViceCapitanoId] = useState("");
 
-  const [note, setNote] = useState("");
-  const [sostituisceConvocazioneId, setSostituisceConvocazioneId] =
-    useState(null);
+  const [note, setNote] = useState(
+    "Si raccomanda di avvisare in caso di indisponibilità."
+  );
 
-  const [errore, setErrore] = useState("");
+  const [caricamento, setCaricamento] = useState(false);
   const [messaggio, setMessaggio] = useState("");
+  const [errore, setErrore] = useState("");
 
   useEffect(() => {
-    async function caricaBozza() {
-      setCaricamento(true);
-      setErrore("");
+    async function caricaGiocatori() {
+      const { data, error } = await supabase
+        .from("persone")
+        .select("id, cognome, nome")
+        .eq("tipo_persona", "giocatore")
+        .eq("attivo", true)
+        .order("cognome", { ascending: true })
+        .order("nome", { ascending: true });
 
-      const [
-        risultatoGiocatori,
-        risultatoConvocazione,
-        risultatoConvocati,
-      ] = await Promise.all([
-        supabase
-          .from("persone")
-          .select("id, cognome, nome")
-          .eq("tipo_persona", "giocatore")
-          .eq("attivo", true)
-          .order("cognome", { ascending: true })
-          .order("nome", { ascending: true }),
-
-        supabase
-          .from("convocazioni")
-          .select("*")
-          .eq("id", id)
-          .single(),
-
-        supabase
-          .from("convocati")
-          .select(
-            `
-            id,
-            giocatore_id,
-            numero_maglia,
-            capitano,
-            vice_capitano
-            `
-          )
-          .eq("convocazione_id", id),
-      ]);
-
-      if (risultatoGiocatori.error) {
-        setErrore(
-          `Errore nel caricamento della rosa: ${risultatoGiocatori.error.message}`
-        );
-        setCaricamento(false);
-        return;
+      if (error) {
+        setErroreGiocatori(error.message);
+      } else {
+        setGiocatori(data ?? []);
       }
 
-      if (risultatoConvocazione.error) {
-        setErrore(
-          `Errore nel caricamento della bozza: ${risultatoConvocazione.error.message}`
-        );
-        setCaricamento(false);
-        return;
-      }
-
-      if (risultatoConvocati.error) {
-        setErrore(
-          `Errore nel caricamento dei convocati: ${risultatoConvocati.error.message}`
-        );
-        setCaricamento(false);
-        return;
-      }
-
-      const bozza = risultatoConvocazione.data;
-
-      if (bozza.pubblicata) {
-        setErrore(
-          "Questa convocazione è già pubblicata e non può essere modificata da questa schermata."
-        );
-        setCaricamento(false);
-        return;
-      }
-
-      if (!bozza.sostituisce_convocazione_id) {
-        setErrore(
-          "La bozza non risulta collegata a una convocazione precedente."
-        );
-        setCaricamento(false);
-        return;
-      }
-
-      const datiConvocati = risultatoConvocati.data ?? [];
-
-      const idsConvocati = datiConvocati.map(
-        (convocato) => convocato.giocatore_id
-      );
-
-      const numeri = {};
-
-      datiConvocati.forEach((convocato) => {
-        numeri[convocato.giocatore_id] =
-          convocato.numero_maglia ?? "";
-      });
-
-      const capitano = datiConvocati.find(
-        (convocato) => convocato.capitano === true
-      );
-
-      const viceCapitano = datiConvocati.find(
-        (convocato) => convocato.vice_capitano === true
-      );
-
-      setGiocatori(risultatoGiocatori.data ?? []);
-
-      setCompetizione(bozza.competizione ?? "Campionato");
-      setSede(bozza.sede ?? "casa");
-      setAvversario(bozza.avversario ?? "");
-      setDataGara(bozza.data_gara ?? "");
-      setCampo(bozza.campo ?? "");
-      setIndirizzo(bozza.indirizzo ?? "");
-      setComune(bozza.comune ?? "");
-      setOraRaduno(
-        bozza.ora_ritrovo
-          ? bozza.ora_ritrovo.slice(0, 5)
-          : ""
-      );
-      setOraGara(
-        bozza.ora_gara
-          ? bozza.ora_gara.slice(0, 5)
-          : ""
-      );
-      setPreRadunoLuogo(bozza.pre_raduno_luogo ?? "");
-      setPreRadunoOra(
-        bozza.pre_raduno_ora
-          ? bozza.pre_raduno_ora.slice(0, 5)
-          : ""
-      );
-
-      setConvocati(idsConvocati);
-      setNumeriMaglia(numeri);
-      setCapitanoId(capitano?.giocatore_id ?? "");
-      setViceCapitanoId(viceCapitano?.giocatore_id ?? "");
-
-      setNote(bozza.note ?? "");
-      setSostituisceConvocazioneId(
-        bozza.sostituisce_convocazione_id
-      );
-
-      setCaricamento(false);
+      setCaricamentoGiocatori(false);
     }
 
-    caricaBozza();
-  }, [id]);
+    caricaGiocatori();
+  }, []);
 
   const titoloPartita = useMemo(() => {
     const nomeAvversario = avversario.trim() || "Avversario";
@@ -211,9 +86,7 @@ function StaffConvocazioneModifica() {
           setViceCapitanoId("");
         }
 
-        return precedenti.filter(
-          (convocatoId) => convocatoId !== giocatoreId
-        );
+        return precedenti.filter((id) => id !== giocatoreId);
       }
 
       return [...precedenti, giocatoreId];
@@ -252,16 +125,10 @@ function StaffConvocazioneModifica() {
       return;
     }
 
-    setConvocati(
-      giocatori.map((giocatore) => giocatore.id)
-    );
+    setConvocati(giocatori.map((giocatore) => giocatore.id));
   }
 
   function validaConvocati() {
-    if (convocati.length === 0) {
-      return "Seleziona almeno un giocatore convocato.";
-    }
-
     for (const giocatoreId of convocati) {
       const numero = String(
         numeriMaglia[giocatoreId] ?? ""
@@ -304,274 +171,135 @@ function StaffConvocazioneModifica() {
     return "";
   }
 
-  function preparaNomiConvocati() {
-    return giocatoriConvocati
+  async function pubblicaConvocazione(event) {
+    event.preventDefault();
+
+    setMessaggio("");
+    setErrore("");
+
+    if (convocati.length === 0) {
+      setErrore("Seleziona almeno un giocatore convocato.");
+      return;
+    }
+
+    const erroreValidazione = validaConvocati();
+
+    if (erroreValidazione) {
+      setErrore(erroreValidazione);
+      return;
+    }
+
+    setCaricamento(true);
+
+    const nomiConvocati = giocatoriConvocati
       .map(
         (giocatore) =>
           `${giocatore.cognome} ${giocatore.nome}`
       )
       .sort((a, b) => a.localeCompare(b, "it"));
-  }
 
-  function preparaRigheConvocati() {
-    return convocati.map((giocatoreId) => ({
-      convocazione_id: Number(id),
-      giocatore_id: giocatoreId,
-      numero_maglia: Number(
-        numeriMaglia[giocatoreId]
-      ),
-      capitano: giocatoreId === capitanoId,
-      vice_capitano:
-        giocatoreId === viceCapitanoId,
-    }));
-  }
+    const {
+      data: convocazioneCreata,
+      error: erroreConvocazione,
+    } = await supabase
+      .from("convocazioni")
+      .insert({
+        competizione,
+        avversario: avversario.trim(),
+        data_gara: dataGara,
+        ora_ritrovo: oraRaduno,
+        ora_gara: oraGara,
+        campo: campo.trim(),
+        indirizzo: indirizzo.trim(),
+        comune: comune.trim(),
+        note: note.trim() || null,
+        pubblicata: true,
+        sede,
+        pre_raduno_luogo:
+          preRadunoLuogo.trim() || null,
+        pre_raduno_ora: preRadunoOra || null,
+        convocati_nomi: nomiConvocati,
+      })
+      .select("id")
+      .single();
 
-  async function salvaBozzaInterna() {
-    const erroreValidazione = validaConvocati();
-
-    if (erroreValidazione) {
-      return {
-        ok: false,
-        messaggio: erroreValidazione,
-      };
+    if (erroreConvocazione) {
+      setCaricamento(false);
+      setErrore(erroreConvocazione.message);
+      return;
     }
 
-    const nomiConvocati = preparaNomiConvocati();
+    const righeConvocati = convocati.map(
+      (giocatoreId) => ({
+        convocazione_id: convocazioneCreata.id,
+        giocatore_id: giocatoreId,
+        numero_maglia: Number(
+          numeriMaglia[giocatoreId]
+        ),
+        capitano: giocatoreId === capitanoId,
+        vice_capitano:
+          giocatoreId === viceCapitanoId,
+      })
+    );
 
-    const { error: erroreAggiornamento } =
-      await supabase
-        .from("convocazioni")
-        .update({
-          competizione,
-          avversario: avversario.trim(),
-          data_gara: dataGara,
-          ora_ritrovo: oraRaduno || null,
-          ora_gara: oraGara || null,
-          campo: campo.trim(),
-          indirizzo: indirizzo.trim(),
-          comune: comune.trim(),
-          note: note.trim() || null,
-          sede,
-          pre_raduno_luogo:
-            preRadunoLuogo.trim() || null,
-          pre_raduno_ora: preRadunoOra || null,
-          convocati_nomi: nomiConvocati,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", id);
-
-    if (erroreAggiornamento) {
-      return {
-        ok: false,
-        messaggio:
-          "Errore nell'aggiornamento della bozza: " +
-          erroreAggiornamento.message,
-      };
-    }
-
-    const { error: erroreEliminazioneConvocati } =
-      await supabase
-        .from("convocati")
-        .delete()
-        .eq("convocazione_id", id);
-
-    if (erroreEliminazioneConvocati) {
-      return {
-        ok: false,
-        messaggio:
-          "Errore nell'aggiornamento dei convocati: " +
-          erroreEliminazioneConvocati.message,
-      };
-    }
-
-    const righeConvocati = preparaRigheConvocati();
-
-    const { error: erroreInserimentoConvocati } =
+    const { error: erroreConvocati } =
       await supabase
         .from("convocati")
         .insert(righeConvocati);
 
-    if (erroreInserimentoConvocati) {
-      return {
-        ok: false,
-        messaggio:
-          "Errore nel salvataggio dei convocati: " +
-          erroreInserimentoConvocati.message,
-      };
-    }
+    if (erroreConvocati) {
+      await supabase
+        .from("convocazioni")
+        .delete()
+        .eq("id", convocazioneCreata.id);
 
-    return {
-      ok: true,
-      messaggio: "",
-    };
-  }
-
-  async function salvaBozza(event) {
-    event.preventDefault();
-
-    setErrore("");
-    setMessaggio("");
-    setSalvataggio(true);
-
-    const risultato = await salvaBozzaInterna();
-
-    setSalvataggio(false);
-
-    if (!risultato.ok) {
-      setErrore(risultato.messaggio);
+      setCaricamento(false);
+      setErrore(
+        `Errore nel salvataggio dei convocati: ${erroreConvocati.message}`
+      );
       return;
     }
+
+    setCaricamento(false);
 
     setMessaggio(
-      "Bozza salvata correttamente. La convocazione visibile alle famiglie non è stata modificata."
+      `Convocazione pubblicata: ${titoloPartita}`
     );
-  }
 
-  async function pubblicaNuovaVersione() {
-    setErrore("");
-    setMessaggio("");
-
-    if (!sostituisceConvocazioneId) {
-      setErrore(
-        "Impossibile individuare la convocazione precedente da sostituire."
-      );
-      return;
-    }
-
-    setPubblicazione(true);
-
-    const risultatoSalvataggio =
-      await salvaBozzaInterna();
-
-    if (!risultatoSalvataggio.ok) {
-      setPubblicazione(false);
-      setErrore(risultatoSalvataggio.messaggio);
-      return;
-    }
-
-    /*
-     * Rendiamo prima pubblica la nuova versione.
-     * In questo modo quella precedente resta visibile
-     * alle famiglie fino al momento della pubblicazione.
-     */
-    const { error: errorePubblicazione } =
-      await supabase
-        .from("convocazioni")
-        .update({
-          pubblicata: true,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", id);
-
-    if (errorePubblicazione) {
-      setPubblicazione(false);
-      setErrore(
-        "Errore nella pubblicazione della nuova versione: " +
-          errorePubblicazione.message
-      );
-      return;
-    }
-
-    /*
-     * Ora nascondiamo alle famiglie la versione precedente.
-     */
-    const { error: erroreDisattivazionePrecedente } =
-      await supabase
-        .from("convocazioni")
-        .update({
-          pubblicata: false,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", sostituisceConvocazioneId);
-
-    if (erroreDisattivazionePrecedente) {
-      /*
-       * Se qualcosa va storto, riportiamo la nuova versione
-       * in bozza per evitare due versioni pubblicate.
-       */
-      await supabase
-        .from("convocazioni")
-        .update({
-          pubblicata: false,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", id);
-
-      setPubblicazione(false);
-
-      setErrore(
-        "La nuova versione non è stata pubblicata perché non è stato possibile sostituire correttamente la precedente."
-      );
-
-      return;
-    }
-
-    setPubblicazione(false);
-
-    navigate(`/staff/convocazione/${id}`);
-  }
-
-  if (caricamento) {
-    return (
-      <section>
-        <p>Caricamento bozza...</p>
-      </section>
-    );
-  }
-
-  if (errore && giocatori.length === 0) {
-    return (
-      <section>
-        <div className="page-heading">
-          <p className="page-kicker">Area Staff</p>
-          <h2>Modifica convocazione</h2>
-        </div>
-
-        <p className="form-message form-message-error">
-          {errore}
-        </p>
-
-        <Link
-          className="button button-primary"
-          to="/staff/convocazioni-elenco"
-        >
-          Torna alle convocazioni
-        </Link>
-      </section>
+    setCompetizione("Campionato");
+    setSede("casa");
+    setAvversario("");
+    setDataGara("");
+    setCampo("");
+    setIndirizzo("");
+    setComune("");
+    setOraRaduno("");
+    setOraGara("");
+    setPreRadunoLuogo("");
+    setPreRadunoOra("");
+    setConvocati([]);
+    setNumeriMaglia({});
+    setCapitanoId("");
+    setViceCapitanoId("");
+    setNote(
+      "Si raccomanda di avvisare in caso di indisponibilità."
     );
   }
 
   return (
     <section>
       <div className="page-heading">
-        <p className="page-kicker">
-          Area Staff · Bozza
-        </p>
-
-        <h2>Modifica convocazione</h2>
-
+        <p className="page-kicker">Area Staff</p>
+        <h2>⚽ Nuova convocazione</h2>
         <p>
-          La versione attualmente pubblicata resta visibile
-          alle famiglie fino alla nuova pubblicazione.
+          Compila i dati della gara e seleziona i
+          giocatori convocati.
         </p>
-      </div>
-
-      <div className="staff-dettaglio-top">
-        <Link
-          className="button button-secondary"
-          to="/staff/convocazioni-elenco"
-        >
-          ← Torna alle convocazioni
-        </Link>
-
-        <span className="convocazione-status bozza">
-          Bozza
-        </span>
       </div>
 
       <form
         className="convocazione-form"
-        onSubmit={salvaBozza}
+        onSubmit={pubblicaConvocazione}
       >
         <div className="convocazione-form-section">
           <h3>Dati della partita</h3>
@@ -581,7 +309,6 @@ function StaffConvocazioneModifica() {
               <label htmlFor="competizione">
                 Competizione
               </label>
-
               <select
                 id="competizione"
                 value={competizione}
@@ -631,7 +358,6 @@ function StaffConvocazioneModifica() {
               <label htmlFor="avversario">
                 Avversario
               </label>
-
               <input
                 id="avversario"
                 type="text"
@@ -639,15 +365,13 @@ function StaffConvocazioneModifica() {
                 onChange={(event) =>
                   setAvversario(event.target.value)
                 }
+                placeholder="Esempio: PO Vittuone"
                 required
               />
             </div>
 
             <div className="form-field">
-              <label htmlFor="data-gara">
-                Data
-              </label>
-
+              <label htmlFor="data-gara">Data</label>
               <input
                 id="data-gara"
                 type="date"
@@ -673,7 +397,6 @@ function StaffConvocazioneModifica() {
           <div className="staff-form">
             <div className="form-field">
               <label htmlFor="campo">Campo</label>
-
               <input
                 id="campo"
                 type="text"
@@ -681,6 +404,7 @@ function StaffConvocazioneModifica() {
                 onChange={(event) =>
                   setCampo(event.target.value)
                 }
+                placeholder="Esempio: Oratorio Vittuone"
                 required
               />
             </div>
@@ -689,7 +413,6 @@ function StaffConvocazioneModifica() {
               <label htmlFor="indirizzo">
                 Indirizzo
               </label>
-
               <input
                 id="indirizzo"
                 type="text"
@@ -697,15 +420,13 @@ function StaffConvocazioneModifica() {
                 onChange={(event) =>
                   setIndirizzo(event.target.value)
                 }
+                placeholder="Esempio: Via Bixio 17, Vittuone"
                 required
               />
             </div>
 
             <div className="form-field">
-              <label htmlFor="comune">
-                Comune
-              </label>
-
+              <label htmlFor="comune">Comune</label>
               <input
                 id="comune"
                 type="text"
@@ -713,6 +434,7 @@ function StaffConvocazioneModifica() {
                 onChange={(event) =>
                   setComune(event.target.value)
                 }
+                placeholder="Esempio: Vittuone"
                 required
               />
             </div>
@@ -721,7 +443,6 @@ function StaffConvocazioneModifica() {
               <label htmlFor="ora-raduno">
                 Ora raduno
               </label>
-
               <input
                 id="ora-raduno"
                 type="time"
@@ -737,7 +458,6 @@ function StaffConvocazioneModifica() {
               <label htmlFor="ora-gara">
                 Ora partita
               </label>
-
               <input
                 id="ora-gara"
                 type="time"
@@ -759,7 +479,6 @@ function StaffConvocazioneModifica() {
               <label htmlFor="pre-raduno-luogo">
                 Luogo
               </label>
-
               <input
                 id="pre-raduno-luogo"
                 type="text"
@@ -769,6 +488,7 @@ function StaffConvocazioneModifica() {
                     event.target.value
                   )
                 }
+                placeholder="Esempio: Corbetta, via Repubblica"
               />
             </div>
 
@@ -776,7 +496,6 @@ function StaffConvocazioneModifica() {
               <label htmlFor="pre-raduno-ora">
                 Ora
               </label>
-
               <input
                 id="pre-raduno-ora"
                 type="time"
@@ -809,33 +528,55 @@ function StaffConvocazioneModifica() {
             </button>
           </div>
 
-          <div className="giocatori-checkbox-grid">
-            {giocatori.map((giocatore) => {
-              const nomeCompleto =
-                `${giocatore.cognome} ${giocatore.nome}`;
+          {caricamentoGiocatori && (
+            <p>Caricamento rosa...</p>
+          )}
 
-              return (
-                <label
-                  key={giocatore.id}
-                  className="giocatore-checkbox"
-                >
-                  <input
-                    type="checkbox"
-                    checked={convocati.includes(
-                      giocatore.id
-                    )}
-                    onChange={() =>
-                      cambiaConvocato(
-                        giocatore.id
-                      )
-                    }
-                  />
+          {erroreGiocatori && (
+            <p className="form-message form-message-error">
+              Errore nel caricamento della rosa:{" "}
+              {erroreGiocatori}
+            </p>
+          )}
 
-                  <span>{nomeCompleto}</span>
-                </label>
-              );
-            })}
-          </div>
+          {!caricamentoGiocatori &&
+            !erroreGiocatori &&
+            giocatori.length === 0 && (
+              <p>
+                Nessun giocatore attivo presente.
+              </p>
+            )}
+
+          {!caricamentoGiocatori &&
+            !erroreGiocatori &&
+            giocatori.length > 0 && (
+              <div className="giocatori-checkbox-grid">
+                {giocatori.map((giocatore) => {
+                  const nomeCompleto =
+                    `${giocatore.cognome} ${giocatore.nome}`;
+
+                  return (
+                    <label
+                      key={giocatore.id}
+                      className="giocatore-checkbox"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={convocati.includes(
+                          giocatore.id
+                        )}
+                        onChange={() =>
+                          cambiaConvocato(
+                            giocatore.id
+                          )
+                        }
+                      />
+                      <span>{nomeCompleto}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            )}
         </div>
 
         {giocatoriConvocati.length > 0 && (
@@ -843,9 +584,8 @@ function StaffConvocazioneModifica() {
             <div className="dati-convocati-heading">
               <div>
                 <h3>Dati riservati Staff</h3>
-
                 <p>
-                  Numero di maglia, Capitano e Vice
+                  Numero di maglia, capitano e vice
                   capitano non saranno visibili alle
                   famiglie.
                 </p>
@@ -888,6 +628,7 @@ function StaffConvocazioneModifica() {
                           event.target.value
                         )
                       }
+                      aria-label={`Numero maglia di ${giocatore.cognome} ${giocatore.nome}`}
                     />
 
                     <label className="ruolo-radio">
@@ -904,7 +645,6 @@ function StaffConvocazioneModifica() {
                           )
                         }
                       />
-
                       <span>Capitano</span>
                     </label>
 
@@ -922,7 +662,6 @@ function StaffConvocazioneModifica() {
                           )
                         }
                       />
-
                       <span>Vice</span>
                     </label>
                   </div>
@@ -935,7 +674,6 @@ function StaffConvocazioneModifica() {
         <div className="convocazione-form-section">
           <div className="form-field">
             <label htmlFor="note">Note</label>
-
             <textarea
               id="note"
               rows="6"
@@ -943,6 +681,7 @@ function StaffConvocazioneModifica() {
               onChange={(event) =>
                 setNote(event.target.value)
               }
+              placeholder="Inserisci eventuali comunicazioni aggiuntive..."
             />
           </div>
         </div>
@@ -961,24 +700,13 @@ function StaffConvocazioneModifica() {
 
         <div className="form-actions">
           <button
-            className="button button-secondary"
-            type="submit"
-            disabled={salvataggio || pubblicazione}
-          >
-            {salvataggio
-              ? "Salvataggio..."
-              : "Salva bozza"}
-          </button>
-
-          <button
             className="button button-primary staff-submit-button"
-            type="button"
-            onClick={pubblicaNuovaVersione}
-            disabled={salvataggio || pubblicazione}
+            type="submit"
+            disabled={caricamento}
           >
-            {pubblicazione
+            {caricamento
               ? "Pubblicazione in corso..."
-              : "Pubblica nuova versione"}
+              : "Pubblica convocazione"}
           </button>
         </div>
       </form>
@@ -986,4 +714,4 @@ function StaffConvocazioneModifica() {
   );
 }
 
-export default StaffConvocazioneModifica;
+export default StaffConvocazioni;
