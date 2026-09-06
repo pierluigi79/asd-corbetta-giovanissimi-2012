@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 
 function StaffConvocazioneDettaglio() {
   const { id } = useParams();
+  const navigate = useNavigate();
 
   const [convocazione, setConvocazione] = useState(null);
   const [convocati, setConvocati] = useState([]);
   const [caricamento, setCaricamento] = useState(true);
+  const [creazioneBozza, setCreazioneBozza] = useState(false);
   const [errore, setErrore] = useState("");
 
   useEffect(() => {
@@ -64,22 +66,24 @@ function StaffConvocazioneDettaglio() {
 
       const convocatiOrdinati = [...(datiConvocati ?? [])].sort(
         (a, b) => {
+          const numeroA =
+            a.numero_maglia === null
+              ? Number.MAX_SAFE_INTEGER
+              : Number(a.numero_maglia);
+
+          const numeroB =
+            b.numero_maglia === null
+              ? Number.MAX_SAFE_INTEGER
+              : Number(b.numero_maglia);
+
+          if (numeroA !== numeroB) {
+            return numeroA - numeroB;
+          }
+
           const cognomeA = a.persone?.cognome ?? "";
           const cognomeB = b.persone?.cognome ?? "";
 
-          const confrontoCognome = cognomeA.localeCompare(
-            cognomeB,
-            "it"
-          );
-
-          if (confrontoCognome !== 0) {
-            return confrontoCognome;
-          }
-
-          const nomeA = a.persone?.nome ?? "";
-          const nomeB = b.persone?.nome ?? "";
-
-          return nomeA.localeCompare(nomeB, "it");
+          return cognomeA.localeCompare(cognomeB, "it");
         }
       );
 
@@ -90,6 +94,105 @@ function StaffConvocazioneDettaglio() {
 
     caricaDettaglio();
   }, [id]);
+
+  async function modificaConvocazione() {
+    if (!convocazione || creazioneBozza) {
+      return;
+    }
+
+    setErrore("");
+    setCreazioneBozza(true);
+
+    const {
+      data: bozzaEsistente,
+      error: erroreRicercaBozza,
+    } = await supabase
+      .from("convocazioni")
+      .select("id")
+      .eq("sostituisce_convocazione_id", convocazione.id)
+      .eq("pubblicata", false)
+      .order("id", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (erroreRicercaBozza) {
+      setErrore(
+        `Errore nella ricerca della bozza: ${erroreRicercaBozza.message}`
+      );
+      setCreazioneBozza(false);
+      return;
+    }
+
+    if (bozzaEsistente) {
+      navigate(
+        `/staff/convocazione/${bozzaEsistente.id}/modifica`
+      );
+      return;
+    }
+
+    const nuovaConvocazione = {
+      competizione: convocazione.competizione,
+      avversario: convocazione.avversario,
+      data_gara: convocazione.data_gara,
+      ora_ritrovo: convocazione.ora_ritrovo,
+      ora_gara: convocazione.ora_gara,
+      campo: convocazione.campo,
+      indirizzo: convocazione.indirizzo,
+      note: convocazione.note,
+      pubblicata: false,
+      sede: convocazione.sede,
+      pre_raduno_luogo: convocazione.pre_raduno_luogo,
+      pre_raduno_ora: convocazione.pre_raduno_ora,
+      comune: convocazione.comune,
+      sostituisce_convocazione_id: convocazione.id,
+    };
+
+    const {
+      data: bozzaCreata,
+      error: erroreCreazioneBozza,
+    } = await supabase
+      .from("convocazioni")
+      .insert(nuovaConvocazione)
+      .select("id")
+      .single();
+
+    if (erroreCreazioneBozza) {
+      setErrore(
+        `Errore nella creazione della bozza: ${erroreCreazioneBozza.message}`
+      );
+      setCreazioneBozza(false);
+      return;
+    }
+
+    if (convocati.length > 0) {
+      const convocatiDaCopiare = convocati.map((convocato) => ({
+        convocazione_id: bozzaCreata.id,
+        giocatore_id: convocato.giocatore_id,
+        numero_maglia: convocato.numero_maglia,
+        capitano: convocato.capitano,
+        vice_capitano: convocato.vice_capitano,
+      }));
+
+      const { error: erroreCopiaConvocati } = await supabase
+        .from("convocati")
+        .insert(convocatiDaCopiare);
+
+      if (erroreCopiaConvocati) {
+        await supabase
+          .from("convocazioni")
+          .delete()
+          .eq("id", bozzaCreata.id);
+
+        setErrore(
+          `La bozza non è stata creata correttamente: ${erroreCopiaConvocati.message}`
+        );
+        setCreazioneBozza(false);
+        return;
+      }
+    }
+
+    navigate(`/staff/convocazione/${bozzaCreata.id}/modifica`);
+  }
 
   function formattaData(data) {
     if (!data) return "—";
@@ -136,7 +239,7 @@ function StaffConvocazioneDettaglio() {
     );
   }
 
-  if (errore) {
+  if (errore && !convocazione) {
     return (
       <section>
         <div className="page-heading">
@@ -198,6 +301,12 @@ function StaffConvocazioneDettaglio() {
         </span>
       </div>
 
+      {errore && (
+        <p className="form-message form-message-error">
+          {errore}
+        </p>
+      )}
+
       <div className="staff-dettaglio-card">
         <h3>Dati della gara</h3>
 
@@ -225,23 +334,17 @@ function StaffConvocazioneDettaglio() {
 
           <div>
             <span>Campo</span>
-            <strong>
-              {convocazione.campo || "—"}
-            </strong>
+            <strong>{convocazione.campo || "—"}</strong>
           </div>
 
           <div>
             <span>Indirizzo</span>
-            <strong>
-              {convocazione.indirizzo || "—"}
-            </strong>
+            <strong>{convocazione.indirizzo || "—"}</strong>
           </div>
 
           <div>
             <span>Comune</span>
-            <strong>
-              {convocazione.comune || "—"}
-            </strong>
+            <strong>{convocazione.comune || "—"}</strong>
           </div>
         </div>
       </div>
@@ -353,6 +456,19 @@ function StaffConvocazioneDettaglio() {
           <strong>Ultimo aggiornamento:</strong>{" "}
           {formattaDataOra(convocazione.updated_at)}
         </p>
+      </div>
+
+      <div className="staff-convocazione-actions">
+        <button
+          type="button"
+          className="button button-primary"
+          onClick={modificaConvocazione}
+          disabled={creazioneBozza}
+        >
+          {creazioneBozza
+            ? "Preparazione bozza..."
+            : "Modifica convocazione"}
+        </button>
       </div>
     </section>
   );

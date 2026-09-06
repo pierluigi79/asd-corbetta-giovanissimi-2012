@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 
@@ -26,6 +26,7 @@ function StaffConvocazioniElenco() {
           comune,
           sede,
           pubblicata,
+          sostituisce_convocazione_id,
           updated_at,
           created_at
           `
@@ -47,6 +48,17 @@ function StaffConvocazioniElenco() {
 
     caricaConvocazioni();
   }, []);
+
+  const convocazioniSostituite = useMemo(() => {
+    return new Set(
+      convocazioni
+        .map(
+          (convocazione) =>
+            convocazione.sostituisce_convocazione_id
+        )
+        .filter((id) => id !== null)
+    );
+  }, [convocazioni]);
 
   function formattaData(data) {
     if (!data) return "Data non disponibile";
@@ -71,14 +83,37 @@ function StaffConvocazioniElenco() {
       : `Corbetta - ${convocazione.avversario}`;
   }
 
+  function statoConvocazione(convocazione) {
+    if (convocazione.pubblicata) {
+      return {
+        testo: "Pubblicata",
+        classe: "pubblicata",
+      };
+    }
+
+    if (convocazioniSostituite.has(convocazione.id)) {
+      return {
+        testo: "Sostituita",
+        classe: "sostituita",
+      };
+    }
+
+    return {
+      testo: "Bozza",
+      classe: "bozza",
+    };
+  }
+
   return (
     <section>
       <div className="page-heading">
         <p className="page-kicker">Area Staff</p>
+
         <h2>Gestisci convocazioni</h2>
+
         <p>
-          Consulta le convocazioni e accedi ai dati completi riservati
-          allo Staff.
+          Consulta le convocazioni e accedi ai dati completi
+          riservati allo Staff.
         </p>
       </div>
 
@@ -111,70 +146,72 @@ function StaffConvocazioniElenco() {
         !errore &&
         convocazioni.length > 0 && (
           <div className="staff-convocazioni-list">
-            {convocazioni.map((convocazione) => (
-              <article
-                key={convocazione.id}
-                className="staff-convocazione-card"
-              >
-                <div className="staff-convocazione-card-top">
-                  <div>
-                    <p className="staff-convocazione-competizione">
-                      {convocazione.competizione}
-                    </p>
+            {convocazioni.map((convocazione) => {
+              const stato = statoConvocazione(convocazione);
 
-                    <h3>{titoloPartita(convocazione)}</h3>
+              return (
+                <article
+                  key={convocazione.id}
+                  className="staff-convocazione-card"
+                >
+                  <div className="staff-convocazione-card-top">
+                    <div>
+                      <p className="staff-convocazione-competizione">
+                        {convocazione.competizione}
+                      </p>
+
+                      <h3>
+                        {titoloPartita(convocazione)}
+                      </h3>
+                    </div>
+
+                    <span
+                      className={`convocazione-status ${stato.classe}`}
+                    >
+                      {stato.testo}
+                    </span>
                   </div>
 
-                  <span
-                    className={
-                      convocazione.pubblicata
-                        ? "convocazione-status pubblicata"
-                        : "convocazione-status bozza"
-                    }
-                  >
-                    {convocazione.pubblicata
-                      ? "Pubblicata"
-                      : "Bozza"}
-                  </span>
-                </div>
+                  <div className="staff-convocazione-info">
+                    <p>
+                      <strong>Data:</strong>{" "}
+                      {formattaData(convocazione.data_gara)}
+                    </p>
 
-                <div className="staff-convocazione-info">
-                  <p>
-                    <strong>Data:</strong>{" "}
-                    {formattaData(convocazione.data_gara)}
-                  </p>
+                    <p>
+                      <strong>Ora gara:</strong>{" "}
+                      {formattaOra(convocazione.ora_gara)}
+                    </p>
 
-                  <p>
-                    <strong>Ora gara:</strong>{" "}
-                    {formattaOra(convocazione.ora_gara)}
-                  </p>
+                    <p>
+                      <strong>Ritrovo:</strong>{" "}
+                      {formattaOra(
+                        convocazione.ora_ritrovo
+                      )}
+                    </p>
 
-                  <p>
-                    <strong>Ritrovo:</strong>{" "}
-                    {formattaOra(convocazione.ora_ritrovo)}
-                  </p>
+                    <p>
+                      <strong>Campo:</strong>{" "}
+                      {convocazione.campo || "—"}
+                    </p>
 
-                  <p>
-                    <strong>Campo:</strong>{" "}
-                    {convocazione.campo || "—"}
-                  </p>
+                    <p>
+                      <strong>Comune:</strong>{" "}
+                      {convocazione.comune || "—"}
+                    </p>
+                  </div>
 
-                  <p>
-                    <strong>Comune:</strong>{" "}
-                    {convocazione.comune || "—"}
-                  </p>
-                </div>
-
-                <div className="staff-convocazione-actions">
-                  <Link
-                    className="button button-primary"
-                    to={`/staff/convocazione/${convocazione.id}`}
-                  >
-                    Apri dettaglio Staff
-                  </Link>
-                </div>
-              </article>
-            ))}
+                  <div className="staff-convocazione-actions">
+                    <Link
+                      className="button button-primary"
+                      to={`/staff/convocazione/${convocazione.id}`}
+                    >
+                      Apri dettaglio Staff
+                    </Link>
+                  </div>
+                </article>
+              );
+            })}
           </div>
         )}
     </section>

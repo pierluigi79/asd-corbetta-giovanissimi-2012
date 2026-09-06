@@ -29,8 +29,11 @@ function StaffConvocazioneModifica() {
   const [viceCapitanoId, setViceCapitanoId] = useState("");
 
   const [note, setNote] = useState("");
-  const [sostituisceConvocazioneId, setSostituisceConvocazioneId] =
-    useState(null);
+
+  const [
+    sostituisceConvocazioneId,
+    setSostituisceConvocazioneId,
+  ] = useState(null);
 
   const [errore, setErrore] = useState("");
   const [messaggio, setMessaggio] = useState("");
@@ -115,7 +118,8 @@ function StaffConvocazioneModifica() {
         return;
       }
 
-      const datiConvocati = risultatoConvocati.data ?? [];
+      const datiConvocati =
+        risultatoConvocati.data ?? [];
 
       const idsConvocati = datiConvocati.map(
         (convocato) => convocato.giocatore_id
@@ -133,29 +137,40 @@ function StaffConvocazioneModifica() {
       );
 
       const viceCapitano = datiConvocati.find(
-        (convocato) => convocato.vice_capitano === true
+        (convocato) =>
+          convocato.vice_capitano === true
       );
 
-      setGiocatori(risultatoGiocatori.data ?? []);
+      setGiocatori(
+        risultatoGiocatori.data ?? []
+      );
 
-      setCompetizione(bozza.competizione ?? "Campionato");
+      setCompetizione(
+        bozza.competizione ?? "Campionato"
+      );
       setSede(bozza.sede ?? "casa");
       setAvversario(bozza.avversario ?? "");
       setDataGara(bozza.data_gara ?? "");
       setCampo(bozza.campo ?? "");
       setIndirizzo(bozza.indirizzo ?? "");
       setComune(bozza.comune ?? "");
+
       setOraRaduno(
         bozza.ora_ritrovo
           ? bozza.ora_ritrovo.slice(0, 5)
           : ""
       );
+
       setOraGara(
         bozza.ora_gara
           ? bozza.ora_gara.slice(0, 5)
           : ""
       );
-      setPreRadunoLuogo(bozza.pre_raduno_luogo ?? "");
+
+      setPreRadunoLuogo(
+        bozza.pre_raduno_luogo ?? ""
+      );
+
       setPreRadunoOra(
         bozza.pre_raduno_ora
           ? bozza.pre_raduno_ora.slice(0, 5)
@@ -164,10 +179,17 @@ function StaffConvocazioneModifica() {
 
       setConvocati(idsConvocati);
       setNumeriMaglia(numeri);
-      setCapitanoId(capitano?.giocatore_id ?? "");
-      setViceCapitanoId(viceCapitano?.giocatore_id ?? "");
+
+      setCapitanoId(
+        capitano?.giocatore_id ?? ""
+      );
+
+      setViceCapitanoId(
+        viceCapitano?.giocatore_id ?? ""
+      );
 
       setNote(bozza.note ?? "");
+
       setSostituisceConvocazioneId(
         bozza.sostituisce_convocazione_id
       );
@@ -179,7 +201,8 @@ function StaffConvocazioneModifica() {
   }, [id]);
 
   const titoloPartita = useMemo(() => {
-    const nomeAvversario = avversario.trim() || "Avversario";
+    const nomeAvversario =
+      avversario.trim() || "Avversario";
 
     return sede === "casa"
       ? `Corbetta - ${nomeAvversario}`
@@ -198,8 +221,12 @@ function StaffConvocazioneModifica() {
     setConvocati((precedenti) => {
       if (precedenti.includes(giocatoreId)) {
         setNumeriMaglia((numeriPrecedenti) => {
-          const nuoviNumeri = { ...numeriPrecedenti };
+          const nuoviNumeri = {
+            ...numeriPrecedenti,
+          };
+
           delete nuoviNumeri[giocatoreId];
+
           return nuoviNumeri;
         });
 
@@ -212,7 +239,8 @@ function StaffConvocazioneModifica() {
         }
 
         return precedenti.filter(
-          (convocatoId) => convocatoId !== giocatoreId
+          (convocatoId) =>
+            convocatoId !== giocatoreId
         );
       }
 
@@ -220,7 +248,10 @@ function StaffConvocazioneModifica() {
     });
   }
 
-  function cambiaNumeroMaglia(giocatoreId, valore) {
+  function cambiaNumeroMaglia(
+    giocatoreId,
+    valore
+  ) {
     setNumeriMaglia((precedenti) => ({
       ...precedenti,
       [giocatoreId]: valore,
@@ -235,7 +266,9 @@ function StaffConvocazioneModifica() {
     }
   }
 
-  function selezionaViceCapitano(giocatoreId) {
+  function selezionaViceCapitano(
+    giocatoreId
+  ) {
     setViceCapitanoId(giocatoreId);
 
     if (capitanoId === giocatoreId) {
@@ -253,7 +286,9 @@ function StaffConvocazioneModifica() {
     }
 
     setConvocati(
-      giocatori.map((giocatore) => giocatore.id)
+      giocatori.map(
+        (giocatore) => giocatore.id
+      )
     );
   }
 
@@ -271,7 +306,8 @@ function StaffConvocazioneModifica() {
         return "Assegna un numero di maglia a tutti i giocatori convocati.";
       }
 
-      const numeroConvertito = Number(numero);
+      const numeroConvertito =
+        Number(numero);
 
       if (
         !Number.isInteger(numeroConvertito) ||
@@ -281,11 +317,14 @@ function StaffConvocazioneModifica() {
       }
     }
 
-    const numeri = convocati.map((giocatoreId) =>
-      Number(numeriMaglia[giocatoreId])
+    const numeri = convocati.map(
+      (giocatoreId) =>
+        Number(numeriMaglia[giocatoreId])
     );
 
-    if (new Set(numeri).size !== numeri.length) {
+    if (
+      new Set(numeri).size !== numeri.length
+    ) {
       return "Non puoi assegnare lo stesso numero di maglia a due giocatori.";
     }
 
@@ -297,7 +336,9 @@ function StaffConvocazioneModifica() {
       return "Seleziona il vice capitano.";
     }
 
-    if (capitanoId === viceCapitanoId) {
+    if (
+      capitanoId === viceCapitanoId
+    ) {
       return "Capitano e vice capitano devono essere due giocatori diversi.";
     }
 
@@ -310,24 +351,30 @@ function StaffConvocazioneModifica() {
         (giocatore) =>
           `${giocatore.cognome} ${giocatore.nome}`
       )
-      .sort((a, b) => a.localeCompare(b, "it"));
+      .sort((a, b) =>
+        a.localeCompare(b, "it")
+      );
   }
 
   function preparaRigheConvocati() {
-    return convocati.map((giocatoreId) => ({
-      convocazione_id: Number(id),
-      giocatore_id: giocatoreId,
-      numero_maglia: Number(
-        numeriMaglia[giocatoreId]
-      ),
-      capitano: giocatoreId === capitanoId,
-      vice_capitano:
-        giocatoreId === viceCapitanoId,
-    }));
+    return convocati.map(
+      (giocatoreId) => ({
+        convocazione_id: Number(id),
+        giocatore_id: giocatoreId,
+        numero_maglia: Number(
+          numeriMaglia[giocatoreId]
+        ),
+        capitano:
+          giocatoreId === capitanoId,
+        vice_capitano:
+          giocatoreId === viceCapitanoId,
+      })
+    );
   }
 
   async function salvaBozzaInterna() {
-    const erroreValidazione = validaConvocati();
+    const erroreValidazione =
+      validaConvocati();
 
     if (erroreValidazione) {
       return {
@@ -336,29 +383,34 @@ function StaffConvocazioneModifica() {
       };
     }
 
-    const nomiConvocati = preparaNomiConvocati();
+    const nomiConvocati =
+      preparaNomiConvocati();
 
-    const { error: erroreAggiornamento } =
-      await supabase
-        .from("convocazioni")
-        .update({
-          competizione,
-          avversario: avversario.trim(),
-          data_gara: dataGara,
-          ora_ritrovo: oraRaduno || null,
-          ora_gara: oraGara || null,
-          campo: campo.trim(),
-          indirizzo: indirizzo.trim(),
-          comune: comune.trim(),
-          note: note.trim() || null,
-          sede,
-          pre_raduno_luogo:
-            preRadunoLuogo.trim() || null,
-          pre_raduno_ora: preRadunoOra || null,
-          convocati_nomi: nomiConvocati,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", id);
+    const {
+      error: erroreAggiornamento,
+    } = await supabase
+      .from("convocazioni")
+      .update({
+        competizione,
+        avversario: avversario.trim(),
+        data_gara: dataGara,
+        ora_ritrovo: oraRaduno || null,
+        ora_gara: oraGara || null,
+        campo: campo.trim(),
+        indirizzo: indirizzo.trim(),
+        comune: comune.trim(),
+        note: note.trim() || null,
+        sede,
+        pre_raduno_luogo:
+          preRadunoLuogo.trim() || null,
+        pre_raduno_ora:
+          preRadunoOra || null,
+        convocati_nomi:
+          nomiConvocati,
+        updated_at:
+          new Date().toISOString(),
+      })
+      .eq("id", id);
 
     if (erroreAggiornamento) {
       return {
@@ -369,11 +421,12 @@ function StaffConvocazioneModifica() {
       };
     }
 
-    const { error: erroreEliminazioneConvocati } =
-      await supabase
-        .from("convocati")
-        .delete()
-        .eq("convocazione_id", id);
+    const {
+      error: erroreEliminazioneConvocati,
+    } = await supabase
+      .from("convocati")
+      .delete()
+      .eq("convocazione_id", id);
 
     if (erroreEliminazioneConvocati) {
       return {
@@ -384,12 +437,14 @@ function StaffConvocazioneModifica() {
       };
     }
 
-    const righeConvocati = preparaRigheConvocati();
+    const righeConvocati =
+      preparaRigheConvocati();
 
-    const { error: erroreInserimentoConvocati } =
-      await supabase
-        .from("convocati")
-        .insert(righeConvocati);
+    const {
+      error: erroreInserimentoConvocati,
+    } = await supabase
+      .from("convocati")
+      .insert(righeConvocati);
 
     if (erroreInserimentoConvocati) {
       return {
@@ -413,7 +468,8 @@ function StaffConvocazioneModifica() {
     setMessaggio("");
     setSalvataggio(true);
 
-    const risultato = await salvaBozzaInterna();
+    const risultato =
+      await salvaBozzaInterna();
 
     setSalvataggio(false);
 
@@ -445,55 +501,58 @@ function StaffConvocazioneModifica() {
 
     if (!risultatoSalvataggio.ok) {
       setPubblicazione(false);
-      setErrore(risultatoSalvataggio.messaggio);
-      return;
-    }
-
-    /*
-     * Rendiamo prima pubblica la nuova versione.
-     * In questo modo quella precedente resta visibile
-     * alle famiglie fino al momento della pubblicazione.
-     */
-    const { error: errorePubblicazione } =
-      await supabase
-        .from("convocazioni")
-        .update({
-          pubblicata: true,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", id);
-
-    if (errorePubblicazione) {
-      setPubblicazione(false);
       setErrore(
-        "Errore nella pubblicazione della nuova versione: " +
-          errorePubblicazione.message
+        risultatoSalvataggio.messaggio
       );
       return;
     }
 
-    /*
-     * Ora nascondiamo alle famiglie la versione precedente.
-     */
-    const { error: erroreDisattivazionePrecedente } =
-      await supabase
-        .from("convocazioni")
-        .update({
-          pubblicata: false,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", sostituisceConvocazioneId);
+    const {
+      error: errorePubblicazione,
+    } = await supabase
+      .from("convocazioni")
+      .update({
+        pubblicata: true,
+        updated_at:
+          new Date().toISOString(),
+      })
+      .eq("id", id);
 
-    if (erroreDisattivazionePrecedente) {
-      /*
-       * Se qualcosa va storto, riportiamo la nuova versione
-       * in bozza per evitare due versioni pubblicate.
-       */
+    if (errorePubblicazione) {
+      setPubblicazione(false);
+
+      setErrore(
+        "Errore nella pubblicazione della nuova versione: " +
+          errorePubblicazione.message
+      );
+
+      return;
+    }
+
+    const {
+      error:
+        erroreDisattivazionePrecedente,
+    } = await supabase
+      .from("convocazioni")
+      .update({
+        pubblicata: false,
+        updated_at:
+          new Date().toISOString(),
+      })
+      .eq(
+        "id",
+        sostituisceConvocazioneId
+      );
+
+    if (
+      erroreDisattivazionePrecedente
+    ) {
       await supabase
         .from("convocazioni")
         .update({
           pubblicata: false,
-          updated_at: new Date().toISOString(),
+          updated_at:
+            new Date().toISOString(),
         })
         .eq("id", id);
 
@@ -508,7 +567,9 @@ function StaffConvocazioneModifica() {
 
     setPubblicazione(false);
 
-    navigate(`/staff/convocazione/${id}`);
+    navigate(
+      `/staff/convocazione/${id}`
+    );
   }
 
   if (caricamento) {
@@ -519,12 +580,20 @@ function StaffConvocazioneModifica() {
     );
   }
 
-  if (errore && giocatori.length === 0) {
+  if (
+    errore &&
+    giocatori.length === 0
+  ) {
     return (
       <section>
         <div className="page-heading">
-          <p className="page-kicker">Area Staff</p>
-          <h2>Modifica convocazione</h2>
+          <p className="page-kicker">
+            Area Staff
+          </p>
+
+          <h2>
+            Modifica convocazione
+          </h2>
         </div>
 
         <p className="form-message form-message-error">
@@ -551,14 +620,16 @@ function StaffConvocazioneModifica() {
         <h2>Modifica convocazione</h2>
 
         <p>
-          La versione attualmente pubblicata resta visibile
-          alle famiglie fino alla nuova pubblicazione.
+          La versione attualmente
+          pubblicata resta visibile alle
+          famiglie fino alla nuova
+          pubblicazione.
         </p>
       </div>
 
       <div className="staff-dettaglio-top">
         <Link
-          className="button button-secondary"
+          className="button button-secondary staff-back-button"
           to="/staff/convocazioni-elenco"
         >
           ← Torna alle convocazioni
@@ -586,7 +657,9 @@ function StaffConvocazioneModifica() {
                 id="competizione"
                 value={competizione}
                 onChange={(event) =>
-                  setCompetizione(event.target.value)
+                  setCompetizione(
+                    event.target.value
+                  )
                 }
               >
                 <option>Campionato</option>
@@ -604,9 +677,13 @@ function StaffConvocazioneModifica() {
                 <button
                   type="button"
                   className={
-                    sede === "casa" ? "selected" : ""
+                    sede === "casa"
+                      ? "selected"
+                      : ""
                   }
-                  onClick={() => setSede("casa")}
+                  onClick={() =>
+                    setSede("casa")
+                  }
                 >
                   In casa
                 </button>
@@ -637,7 +714,9 @@ function StaffConvocazioneModifica() {
                 type="text"
                 value={avversario}
                 onChange={(event) =>
-                  setAvversario(event.target.value)
+                  setAvversario(
+                    event.target.value
+                  )
                 }
                 required
               />
@@ -653,16 +732,26 @@ function StaffConvocazioneModifica() {
                 type="date"
                 value={dataGara}
                 onChange={(event) =>
-                  setDataGara(event.target.value)
+                  setDataGara(
+                    event.target.value
+                  )
                 }
                 required
               />
             </div>
 
             <div className="partita-preview form-field-full">
-              <span>Anteprima partita</span>
-              <strong>{titoloPartita}</strong>
-              <small>{competizione}</small>
+              <span>
+                Anteprima partita
+              </span>
+
+              <strong>
+                {titoloPartita}
+              </strong>
+
+              <small>
+                {competizione}
+              </small>
             </div>
           </div>
         </div>
@@ -672,14 +761,18 @@ function StaffConvocazioneModifica() {
 
           <div className="staff-form">
             <div className="form-field">
-              <label htmlFor="campo">Campo</label>
+              <label htmlFor="campo">
+                Campo
+              </label>
 
               <input
                 id="campo"
                 type="text"
                 value={campo}
                 onChange={(event) =>
-                  setCampo(event.target.value)
+                  setCampo(
+                    event.target.value
+                  )
                 }
                 required
               />
@@ -695,7 +788,9 @@ function StaffConvocazioneModifica() {
                 type="text"
                 value={indirizzo}
                 onChange={(event) =>
-                  setIndirizzo(event.target.value)
+                  setIndirizzo(
+                    event.target.value
+                  )
                 }
                 required
               />
@@ -711,7 +806,9 @@ function StaffConvocazioneModifica() {
                 type="text"
                 value={comune}
                 onChange={(event) =>
-                  setComune(event.target.value)
+                  setComune(
+                    event.target.value
+                  )
                 }
                 required
               />
@@ -727,7 +824,9 @@ function StaffConvocazioneModifica() {
                 type="time"
                 value={oraRaduno}
                 onChange={(event) =>
-                  setOraRaduno(event.target.value)
+                  setOraRaduno(
+                    event.target.value
+                  )
                 }
                 required
               />
@@ -743,7 +842,9 @@ function StaffConvocazioneModifica() {
                 type="time"
                 value={oraGara}
                 onChange={(event) =>
-                  setOraGara(event.target.value)
+                  setOraGara(
+                    event.target.value
+                  )
                 }
                 required
               />
@@ -752,7 +853,9 @@ function StaffConvocazioneModifica() {
         </div>
 
         <div className="convocazione-form-section">
-          <h3>Pre-raduno facoltativo</h3>
+          <h3>
+            Pre-raduno facoltativo
+          </h3>
 
           <div className="staff-form">
             <div className="form-field">
@@ -763,7 +866,9 @@ function StaffConvocazioneModifica() {
               <input
                 id="pre-raduno-luogo"
                 type="text"
-                value={preRadunoLuogo}
+                value={
+                  preRadunoLuogo
+                }
                 onChange={(event) =>
                   setPreRadunoLuogo(
                     event.target.value
@@ -795,7 +900,10 @@ function StaffConvocazioneModifica() {
           <div className="convocati-heading">
             <div>
               <h3>Convocati</h3>
-              <p>Selezionati: {convocati.length}</p>
+              <p>
+                Selezionati:{" "}
+                {convocati.length}
+              </p>
             </div>
 
             <button
@@ -803,51 +911,62 @@ function StaffConvocazioneModifica() {
               className="select-all-button"
               onClick={selezionaTutti}
             >
-              {convocati.length === giocatori.length
+              {convocati.length ===
+              giocatori.length
                 ? "Deseleziona tutti"
                 : "Seleziona tutti"}
             </button>
           </div>
 
           <div className="giocatori-checkbox-grid">
-            {giocatori.map((giocatore) => {
-              const nomeCompleto =
-                `${giocatore.cognome} ${giocatore.nome}`;
+            {giocatori.map(
+              (giocatore) => {
+                const nomeCompleto =
+                  `${giocatore.cognome} ${giocatore.nome}`;
 
-              return (
-                <label
-                  key={giocatore.id}
-                  className="giocatore-checkbox"
-                >
-                  <input
-                    type="checkbox"
-                    checked={convocati.includes(
+                return (
+                  <label
+                    key={
                       giocatore.id
-                    )}
-                    onChange={() =>
-                      cambiaConvocato(
-                        giocatore.id
-                      )
                     }
-                  />
+                    className="giocatore-checkbox"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={convocati.includes(
+                        giocatore.id
+                      )}
+                      onChange={() =>
+                        cambiaConvocato(
+                          giocatore.id
+                        )
+                      }
+                    />
 
-                  <span>{nomeCompleto}</span>
-                </label>
-              );
-            })}
+                    <span>
+                      {nomeCompleto}
+                    </span>
+                  </label>
+                );
+              }
+            )}
           </div>
         </div>
 
-        {giocatoriConvocati.length > 0 && (
+        {giocatoriConvocati.length >
+          0 && (
           <div className="convocazione-form-section">
             <div className="dati-convocati-heading">
               <div>
-                <h3>Dati riservati Staff</h3>
+                <h3>
+                  Dati riservati Staff
+                </h3>
 
                 <p>
-                  Numero di maglia, Capitano e Vice
-                  capitano non saranno visibili alle
-                  famiglie.
+                  Numero di maglia,
+                  Capitano e Vice
+                  capitano non saranno
+                  visibili alle famiglie.
                 </p>
               </div>
             </div>
@@ -863,12 +982,18 @@ function StaffConvocazioneModifica() {
               {giocatoriConvocati.map(
                 (giocatore) => (
                   <div
-                    key={giocatore.id}
+                    key={
+                      giocatore.id
+                    }
                     className="dati-convocato-row"
                   >
                     <strong>
-                      {giocatore.cognome}{" "}
-                      {giocatore.nome}
+                      {
+                        giocatore.cognome
+                      }{" "}
+                      {
+                        giocatore.nome
+                      }
                     </strong>
 
                     <input
@@ -882,10 +1007,13 @@ function StaffConvocazioneModifica() {
                           giocatore.id
                         ] ?? ""
                       }
-                      onChange={(event) =>
+                      onChange={(
+                        event
+                      ) =>
                         cambiaNumeroMaglia(
                           giocatore.id,
-                          event.target.value
+                          event.target
+                            .value
                         )
                       }
                     />
@@ -905,7 +1033,9 @@ function StaffConvocazioneModifica() {
                         }
                       />
 
-                      <span>Capitano</span>
+                      <span>
+                        Capitano
+                      </span>
                     </label>
 
                     <label className="ruolo-radio">
@@ -934,14 +1064,18 @@ function StaffConvocazioneModifica() {
 
         <div className="convocazione-form-section">
           <div className="form-field">
-            <label htmlFor="note">Note</label>
+            <label htmlFor="note">
+              Note
+            </label>
 
             <textarea
               id="note"
               rows="6"
               value={note}
               onChange={(event) =>
-                setNote(event.target.value)
+                setNote(
+                  event.target.value
+                )
               }
             />
           </div>
@@ -961,9 +1095,12 @@ function StaffConvocazioneModifica() {
 
         <div className="form-actions">
           <button
-            className="button button-secondary"
+            className="button button-secondary staff-draft-button"
             type="submit"
-            disabled={salvataggio || pubblicazione}
+            disabled={
+              salvataggio ||
+              pubblicazione
+            }
           >
             {salvataggio
               ? "Salvataggio..."
@@ -973,8 +1110,13 @@ function StaffConvocazioneModifica() {
           <button
             className="button button-primary staff-submit-button"
             type="button"
-            onClick={pubblicaNuovaVersione}
-            disabled={salvataggio || pubblicazione}
+            onClick={
+              pubblicaNuovaVersione
+            }
+            disabled={
+              salvataggio ||
+              pubblicazione
+            }
           >
             {pubblicazione
               ? "Pubblicazione in corso..."

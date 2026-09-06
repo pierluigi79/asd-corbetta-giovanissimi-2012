@@ -1248,3 +1248,41 @@ main > section h2 {
     grid-column: 1 / -1;
   }
 }
+/* Pulsante ritorno nelle pagine Staff */
+.staff-back-button {
+  background: #ffffff;
+  color: #173a78;
+  border: 1px solid #b8c9e6;
+  font-weight: 700;
+}
+
+.staff-back-button:hover {
+  background: #eef4ff;
+  color: #173a78;
+  border-color: #5b88cf;
+}/* Pulsante Salva bozza */
+.staff-draft-button {
+  background: #ffffff;
+  color: #173a78;
+  border: 1px solid #b8c9e6;
+  font-weight: 700;
+}
+
+.staff-draft-button:hover:not(:disabled) {
+  background: #eef4ff;
+  color: #173a78;
+  border-color: #5b88cf;
+}
+
+.staff-draft-button:disabled {
+  background: #f2f4f7;
+  color: #8a96a6;
+  border-color: #d7dee8;
+  cursor: not-allowed;
+  opacity: 1;
+}
+/* Convocazione sostituita */
+.convocazione-status.sostituita {
+  background: #edf0f4;
+  color: #5f6b78;
+}
