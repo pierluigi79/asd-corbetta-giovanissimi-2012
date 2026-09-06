@@ -483,94 +483,126 @@ function StaffConvocazioneModifica() {
     );
   }
 
-  async function pubblicaNuovaVersione() {
-    setErrore("");
-    setMessaggio("");
+async function pubblicaNuovaVersione() {
+  setErrore("");
+  setMessaggio("");
 
-    if (!sostituisceConvocazioneId) {
-      setErrore(
-        "Impossibile individuare la convocazione precedente da sostituire."
-      );
-      return;
-    }
+  if (!sostituisceConvocazioneId) {
+    setErrore(
+      "Impossibile individuare la convocazione precedente da sostituire."
+    );
+    return;
+  }
 
-    setPubblicazione(true);
+  setPubblicazione(true);
 
-    const risultatoSalvataggio =
-      await salvaBozzaInterna();
+  const risultatoSalvataggio =
+    await salvaBozzaInterna();
 
-    if (!risultatoSalvataggio.ok) {
-      setPubblicazione(false);
-      setErrore(
-        risultatoSalvataggio.messaggio
-      );
-      return;
-    }
+  if (!risultatoSalvataggio.ok) {
+    setPubblicazione(false);
+    setErrore(risultatoSalvataggio.messaggio);
+    return;
+  }
 
-    const {
-      error: errorePubblicazione,
-    } = await supabase
+  const { error: errorePubblicazione } =
+    await supabase
       .from("convocazioni")
       .update({
         pubblicata: true,
-        updated_at:
-          new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       })
       .eq("id", id);
 
-    if (errorePubblicazione) {
-      setPubblicazione(false);
+  if (errorePubblicazione) {
+    setPubblicazione(false);
 
-      setErrore(
-        "Errore nella pubblicazione della nuova versione: " +
-          errorePubblicazione.message
-      );
+    setErrore(
+      "Errore nella pubblicazione della nuova versione: " +
+        errorePubblicazione.message
+    );
 
-      return;
-    }
+    return;
+  }
+
+  /*
+   * Risaliamo tutta la catena delle versioni precedenti.
+   * Esempio:
+   * 20 <- 21 <- 22
+   *
+   * Se pubblichiamo 22, devono diventare false sia 21 che 20.
+   */
+  const idsDaDisattivare = [];
+  let idCorrente = sostituisceConvocazioneId;
+
+  while (idCorrente) {
+    idsDaDisattivare.push(idCorrente);
 
     const {
-      error:
-        erroreDisattivazionePrecedente,
+      data: versionePrecedente,
+      error: erroreVersionePrecedente,
     } = await supabase
       .from("convocazioni")
-      .update({
-        pubblicata: false,
-        updated_at:
-          new Date().toISOString(),
-      })
-      .eq(
-        "id",
-        sostituisceConvocazioneId
-      );
+      .select("sostituisce_convocazione_id")
+      .eq("id", idCorrente)
+      .single();
 
-    if (
-      erroreDisattivazionePrecedente
-    ) {
+    if (erroreVersionePrecedente) {
       await supabase
         .from("convocazioni")
         .update({
           pubblicata: false,
-          updated_at:
-            new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         })
         .eq("id", id);
 
       setPubblicazione(false);
 
       setErrore(
-        "La nuova versione non è stata pubblicata perché non è stato possibile sostituire correttamente la precedente."
+        "La nuova versione non è stata pubblicata perché non è stato possibile ricostruire correttamente lo storico delle versioni."
       );
 
       return;
     }
 
-    setPubblicazione(false);
-
-    navigate(
-      `/staff/convocazione/${id}`
-    );
+    idCorrente =
+      versionePrecedente.sostituisce_convocazione_id;
   }
+
+  if (idsDaDisattivare.length > 0) {
+    const {
+      error: erroreDisattivazionePrecedenti,
+    } = await supabase
+      .from("convocazioni")
+      .update({
+        pubblicata: false,
+        updated_at: new Date().toISOString(),
+      })
+      .in("id", idsDaDisattivare);
+
+    if (erroreDisattivazionePrecedenti) {
+      await supabase
+        .from("convocazioni")
+        .update({
+          pubblicata: false,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", id);
+
+      setPubblicazione(false);
+
+      setErrore(
+        "La nuova versione non è stata pubblicata perché non è stato possibile sostituire correttamente tutte le versioni precedenti."
+      );
+
+      return;
+    }
+  }
+
+  setPubblicazione(false);
+
+  navigate(`/staff/convocazione/${id}`);
+}
 
   if (caricamento) {
     return (
