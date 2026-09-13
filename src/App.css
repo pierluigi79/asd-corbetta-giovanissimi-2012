@@ -1286,3 +1286,49 @@ main > section h2 {
   background: #edf0f4;
   color: #5f6b78;
 }
+/* HOME - contenuti dinamici in evidenza */
+
+.home-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.home-card .button {
+  width: fit-content;
+  margin-top: auto;
+}
+
+.home-card .button-primary {
+  background: #0c4a7f;
+  color: white;
+  border: 1px solid #0c4a7f;
+}
+
+.home-card .button-primary:hover {
+  background: #08375f;
+}
+
+.home-card .button-secondary {
+  background: white;
+  color: #0c4a7f;
+  border: 1px solid #0c4a7f;
+}
+
+.home-card .button-secondary:hover {
+  background: #eaf5fd;
+}
+
+.home-avviso-preview {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+
+@media (max-width: 760px) {
+  .home-card .button {
+    width: 100%;
+    text-align: center;
+  }
+}
